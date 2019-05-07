@@ -1,76 +1,125 @@
-from tkinter import*
+import tkinter as tk
 
-# Test-/Hilfsfuktion
-def algo(x,y):
-    return "..."
+Window = tk.Tk()
+Window.title('Teamprojekt 19: Vorhersagesystem')
 
-# Test-/Hilfsfuktion
-def berechneWahrscheinlichkeit():
+#Minimaler Vorhersage-Algorithmus
+def mVA(home, away):
     wahrscheinlichkeitNumber = 0
     wkt = str(wahrscheinlichkeitNumber)
-    ergebnis.config(text=wkt)
+    label.config(text=wkt)
+    #fuktioniert nur für dieses eine label
+
+'''
+def crawlTeam........................
+'''
+
+
+#Knöpfe:   #################################################################################################
+
+#Crawler
+crawlerbutton = tk.Button(Window, text = '\nStarte Crawler\n', fg ='black')
+
+#Training
+trainingbutton = tk.Button(Window, text = '\nStarte training\n', fg ='black')
+
+#Berechnung starten
+calculateButton = tk.Button(Window, text = 'Berechne Gewinnwahrscheinlichkeit', fg ='black', command=mVA)
+
+#Fenster schließen
+closebutton = tk.Button(Window, text='Abbrechen', bg= "grey", fg = "white", width=25, command=Window.destroy)
 
 
 
-window = Tk()
-window.title("Bundesliga-Vorhersage-Teamprojekt")
+# DROPDOWN-LISTEN   #################################################################################################
+var1 = tk.StringVar()
+dropdown1= tk.OptionMenu(Window, var1, "Augsburg", "Berlin", "Bremen", "Dortmund", "Düsseldorf", "Frankfurt", "Freiburg", "Gladbach", "Hannover", "Hoffenheim", "Leipzig", "Leverkusen", "Mainz", "München", "Nürnberg", "Schalke", "Stuttgart", "Wolfsburg")
+var1.set("Augsburg")
+#var1.get()
+var2 = tk.StringVar()
+dropdown2= tk.OptionMenu(Window, var2, "Augsburg", "Berlin", "Bremen", "Dortmund", "Düsseldorf", "Frankfurt", "Freiburg", "Gladbach", "Hannover", "Hoffenheim", "Leipzig", "Leverkusen", "Mainz", "München", "Nürnberg", "Schalke", "Stuttgart", "Wolfsburg")
+var2.set("Berlin")
+#var2.get()
 
-#Überschrift
-#Label (window, text="Teamprojekt:", font="none 16 bold") .grid(row=0, column=0, sticky=W)
-#Label (window, text="Vorhersagesystem für die Bundesliga", font="none 16 bold") .grid(row=1, column=0, sticky=W)
+#Label   #################################################################################################
+label = tk.Label(Window, text="?")
+labelHeim = tk.Label(Window, text = "\nHeim:", width=25)
+labelGast = tk.Label(Window, text = "\nGast:", width=25)
 
-# CRAWLER
-Button(window, text="Crawler aktivieren") .grid(row=3, column=0, sticky=W)
-#crawler liefert .csv-datei mit name, heim, gast, tore-heim, tore-gast
-# Leerzeile
-Label (window, text="", width=25) .grid(row=4, column=0)
+LabelkommenderSpieltag= tk.Label(Window, text="Der kommende Spieltag:", width=25)
+heim1 = tk.Label(Window, text="crawlHeim1", width=25)
+gast1 = tk.Label(Window, text="crawlGast1", width=25)
+erg1 = tk.Label(Window, text="W(crawlHeim1,crawlGast1)", width=25)
+heim2 = tk.Label(Window, text="crawlHeim2", width=25)
+gast2 = tk.Label(Window, text="crawlGast2", width=25)
+erg2 = tk.Label(Window, text="W(crawlHeim2,crawlGast2)", width=25)
+heim3 = tk.Label(Window, text="crawlHeim3", width=25)
+gast3 = tk.Label(Window, text="crawlGast3", width=25)
+erg3 = tk.Label(Window, text="W(crawlHeim3,crawlGast3)", width=25)
+heim4 = tk.Label(Window, text="crawlHeim4", width=25)
+gast4 = tk.Label(Window, text="crawlGast4", width=25)
+erg4 = tk.Label(Window, text="W(crawlHeim4,crawlGast4)", width=25)
+heim5 = tk.Label(Window, text="crawlHeim5", width=25)
+gast5 = tk.Label(Window, text="crawlGast5", width=25)
+erg5 = tk.Label(Window, text="W(crawlHeim5,crawlGast5)", width=25)
+heim6 = tk.Label(Window, text="crawlHeim5", width=25)
+gast6 = tk.Label(Window, text="crawlGast6", width=25)
+erg6 = tk.Label(Window, text="W(crawlHeim6,crawlGast6)", width=25)
+heim7 = tk.Label(Window, text="crawlHeim7", width=25)
+gast7 = tk.Label(Window, text="crawlGast7", width=25)
+erg7 = tk.Label(Window, text="W(crawlHeim7,crawlGast7)", width=25)
+heim8 = tk.Label(Window, text="crawlHeim8", width=25)
+gast8 = tk.Label(Window, text="crawlGast8", width=25)
+erg8 = tk.Label(Window, text="W(crawlHeim8,crawlGast8)", width=25)
+heim9 = tk.Label(Window, text="crawlHeim9", width=25)
+gast9 = tk.Label(Window, text="crawlGast9", width=25)
+erg9 = tk.Label(Window, text="W(crawlHeim9,crawlGast9)", width=25)
 
-# TRAINING
-Button (window, text="Trainiere ML-A") .grid(row=5, column=0, sticky=W)
-# Leerzeile
-Label (window, text="", width=25) .grid(row=6, column=0)
+üb = tk.Label(Window, text="Vorhersage-System für die Bundesliga\n", font='Arial 20 bold')
+üb.grid(column=0, row=0, columnspan=3)
 
-# DROPDOWN-LISTEN
-var1 = StringVar()
-dropdown1=OptionMenu(window, var1, "Augsburg", "Berlin", "Bremen", "Dortmund", "Düsseldorf", "Frankfurt", "Freiburg", "Gladbach", "Hannover", "Hoffenheim", "Leipzig", "Leverkusen", "Mainz", "München", "Nürnberg", "Schalke", "Stuttgart", "Wolfsburg")
-var2 = StringVar()
-dropdown2=OptionMenu(window, var2, "Augsburg", "Berlin", "Bremen", "Dortmund", "Düsseldorf", "Frankfurt", "Freiburg", "Gladbach", "Hannover", "Hoffenheim", "Leipzig", "Leverkusen", "Mainz", "München", "Nürnberg", "Schalke", "Stuttgart", "Wolfsburg")
+#Postition in Grid festlegen
+crawlerbutton.grid(column=0, row=1, sticky='W')
+trainingbutton.grid(column=0, row=10, sticky='W')
+labelHeim.grid(column =0, row =20)
+labelGast.grid(column =1, row =20)
+dropdown1.grid(column=0, row=21)
+dropdown2.grid(column=1, row=21)
+calculateButton.grid(column=2, row=21)
+label.grid(column=2, row=22)
 
-Label (window, text="HEIM:", width=25) .grid(row=7, column=0)
-dropdown1.grid(row=8, column=0)
+spieltag = 50
+LabelkommenderSpieltag.grid(column=0,row=spieltag)
+heim1.grid(column=0,row=spieltag+1)
+gast1.grid(column=1,row=spieltag+1)
+erg1.grid(column=2,row=spieltag+1)
+heim2.grid(column=0,row=spieltag+2)
+gast2.grid(column=1,row=spieltag+2)
+erg2.grid(column=2,row=spieltag+2)
+heim3.grid(column=0,row=spieltag+3)
+gast3.grid(column=1,row=spieltag+3)
+erg3.grid(column=2,row=spieltag+3)
+heim4.grid(column=0,row=spieltag+4)
+gast4.grid(column=1,row=spieltag+4)
+erg4.grid(column=2,row=spieltag+4)
+heim5.grid(column=0,row=spieltag+5)
+gast5.grid(column=1,row=spieltag+5)
+erg5.grid(column=2,row=spieltag+5)
+heim6.grid(column=0,row=spieltag+6)
+gast6.grid(column=1,row=spieltag+6)
+erg6.grid(column=2,row=spieltag+6)
+heim7.grid(column=0,row=spieltag+7)
+gast7.grid(column=1,row=spieltag+7)
+erg7.grid(column=2,row=spieltag+7)
+heim8.grid(column=0,row=spieltag+8)
+gast8.grid(column=1,row=spieltag+8)
+erg8.grid(column=2,row=spieltag+8)
+heim9.grid(column=0,row=spieltag+9)
+gast9.grid(column=1,row=spieltag+9)
+erg9.grid(column=2,row=spieltag+9)
 
-Label (window, text="GAST:", width=25) .grid(row=7, column=1)
-dropdown2.grid(row=8, column=1)
-
-gewinnW = Button (window, text="berechne GewinnW'(Heim)", command=berechneWahrscheinlichkeit, width=25)
-gewinnW.grid(row=7, column=2)
-ergebnis = Label(window, text="-", width=25)
-# statt algo(1,2) <-> algo(crawlHeim,crawlGast)
-ergebnis.grid(row=8, column=2)
-# Leerzeile
-Label (window, text="", width=25) .grid(row=9, column=0)
+closebutton.grid(column=2, row=100)
 
 
-Label (window, text="Der kommender Spieltag:", width=25) .grid(row=10, column=0)
-heim1 = Label(window, text="...", width=25) .grid(row=11, column=0)
-gast1 = Label(window, text="...", width=25) .grid(row=11, column=1)
-erg1 =  Label(window, text=algo(1, 2), width=25) .grid(row=11, column=2)
-# statt algo(1,2) <-> algo(crawlHeim,crawlGast)
-#heim2 = (window, text=eineFUNKTION(), width=25) .grid(row=12, column=0)
-#gast2 = (window, text=eineFUNKTION(), width=25) .grid(row=12, column=1)
-#heim3 = (window, text=eineFUNKTION(), width=25) .grid(row=13, column=0)
-#gast3 = (window, text=eineFUNKTION(), width=25) .grid(row=13, column=1)
-#heim4 = (window, text=eineFUNKTION(), width=25) .grid(row=14, column=0)
-#gast4 = (window, text=eineFUNKTION(), width=25) .grid(row=14, column=1)
-#heim5 = (window, text=eineFUNKTION(), width=25) .grid(row=15, column=0)
-#gast5 = (window, text=eineFUNKTION(), width=25) .grid(row=15, column=1)
-#heim6 = (window, text=eineFUNKTION(), width=25) .grid(row=16, column=0)
-#gast6 = (window, text=eineFUNKTION(), width=25) .grid(row=16, column=1)
-#heim7 = (window, text=eineFUNKTION(), width=25) .grid(row=17, column=0)
-#gast7 = (window, text=eineFUNKTION(), width=25) .grid(row=17, column=1)
-#heim8 = (window, text=eineFUNKTION(), width=25) .grid(row=18, column=0)
-#gast8 = (window, text=eineFUNKTION(), width=25) .grid(row=18, column=1)
-#heim9 = (window, text=eineFUNKTION(), width=25) .grid(row=19, column=0)
-#gast9 = (window, text=eineFUNKTION(), width=25) .grid(row=19, column=1)
 
-window.mainloop()
+Window.mainloop()
