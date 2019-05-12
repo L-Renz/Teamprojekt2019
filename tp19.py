@@ -3,19 +3,18 @@ import tkinter as tk
 Window = tk.Tk()
 Window.title('Teamprojekt 19: Vorhersagesystem')
 
-#Minimaler Vorhersage-Algorithmus
-def mVA(home, away):
+#Platzhalter: Minimaler Vorhersage-Algorithmus
+def predict():
     wahrscheinlichkeitNumber = 0
     wkt = str(wahrscheinlichkeitNumber)
-    label.config(text=wkt)
-    #fuktioniert nur für dieses eine label
+    labelErgebnis.config(text=wkt)
 
 '''
-def crawlTeam........................
+def crawlTeam...
 '''
 
 
-#Knöpfe:   #################################################################################################
+#Buttons:
 
 #Crawler
 crawlerbutton = tk.Button(Window, text = '\nStarte Crawler\n', fg ='black')
@@ -24,14 +23,13 @@ crawlerbutton = tk.Button(Window, text = '\nStarte Crawler\n', fg ='black')
 trainingbutton = tk.Button(Window, text = '\nStarte training\n', fg ='black')
 
 #Berechnung starten
-calculateButton = tk.Button(Window, text = 'Berechne Gewinnwahrscheinlichkeit', fg ='black', command=mVA)
+calculateButton = tk.Button(Window, text = 'Berechne Gewinnwahrscheinlichkeit', fg ='black', command=predict)
 
 #Fenster schließen
 closebutton = tk.Button(Window, text='Abbrechen', bg= "grey", fg = "white", width=25, command=Window.destroy)
 
 
-
-# DROPDOWN-LISTEN   #################################################################################################
+# DROPDOWN-LISTEN 
 var1 = tk.StringVar()
 dropdown1= tk.OptionMenu(Window, var1, "Augsburg", "Berlin", "Bremen", "Dortmund", "Düsseldorf", "Frankfurt", "Freiburg", "Gladbach", "Hannover", "Hoffenheim", "Leipzig", "Leverkusen", "Mainz", "München", "Nürnberg", "Schalke", "Stuttgart", "Wolfsburg")
 var1.set("Augsburg")
@@ -41,7 +39,8 @@ dropdown2= tk.OptionMenu(Window, var2, "Augsburg", "Berlin", "Bremen", "Dortmund
 var2.set("Berlin")
 #var2.get()
 
-#Label   #################################################################################################
+
+#Label 
 label = tk.Label(Window, text="?")
 labelHeim = tk.Label(Window, text = "\nHeim:", width=25)
 labelGast = tk.Label(Window, text = "\nGast:", width=25)
@@ -74,9 +73,8 @@ erg8 = tk.Label(Window, text="W(crawlHeim8,crawlGast8)", width=25)
 heim9 = tk.Label(Window, text="crawlHeim9", width=25)
 gast9 = tk.Label(Window, text="crawlGast9", width=25)
 erg9 = tk.Label(Window, text="W(crawlHeim9,crawlGast9)", width=25)
+ueberschrift = tk.Label(Window, text="Vorhersage-System für die Bundesliga\n", font='Arial 20 bold')
 
-üb = tk.Label(Window, text="Vorhersage-System für die Bundesliga\n", font='Arial 20 bold')
-üb.grid(column=0, row=0, columnspan=3)
 
 #Postition in Grid festlegen
 crawlerbutton.grid(column=0, row=1, sticky='W')
@@ -87,6 +85,7 @@ dropdown1.grid(column=0, row=21)
 dropdown2.grid(column=1, row=21)
 calculateButton.grid(column=2, row=21)
 label.grid(column=2, row=22)
+ueberschrift.grid(column=0, row=0, columnspan=3)
 
 spieltag = 50
 LabelkommenderSpieltag.grid(column=0,row=spieltag)
