@@ -7,12 +7,10 @@ Window.title('Teamprojekt 19: Vorhersagesystem')
 def predict():
     wahrscheinlichkeitNumber = 0
     wkt = str(wahrscheinlichkeitNumber)
-    labelErgebnis.config(text=wkt)
+    label.config(text=wkt)
 
-'''
-def crawlTeam...
-'''
-
+def crawlTeam():
+    pass
 
 #Buttons:
 
