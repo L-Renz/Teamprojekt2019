@@ -1,4 +1,49 @@
 import tkinter as tk
+import requests
+import json
+
+
+aktuellesJahr = 2017
+aktuellerSpieltag = 2
+kommenderSpieltag = (aktuellerSpieltag+1)
+#abfangen: aktuellerSpieltag=34 +1
+
+def crawlTeam(Jahr, Spieltag):
+
+    # enthält Teams einer Saison
+    TeamListe = []
+
+    # externe Daten
+    Spieltaglink = ("https://www.openligadb.de/api/getmatchdata/bl1/")+ str(Jahr)+ ("/")+ str(Spieltag)
+
+    #holt externe Daten eines Spieltages
+    r = requests.get(Spieltaglink)
+    y = json.loads(r.text)
+
+    #geht alle Begegnungen des Spieltages durch
+    i = 0
+    while i < 9:
+        p = y[i]
+
+        # Speichere jeweils die Heimmanschaft
+        a = dict.get(p, "Team1")
+        b = dict.get(a, "TeamName")
+        Heim = str(b)
+        # Test
+        #print(Heim)
+        TeamListe.append(Heim)
+
+        # Speichere jeweils die Gastmannschaft
+        c = dict.get(p, "Team2")
+        d = dict.get(c, "TeamName")
+        Gast = str(d)
+        # Test
+        #print(Gast)
+        TeamListe.append(Gast)
+
+        i =i+1
+    return TeamListe
+
 
 class GUI:
     def __init__(self):
@@ -20,14 +65,15 @@ class GUI:
         self.closebutton = tk.Button(self.Window, text='Abbrechen', bg= "grey", fg = "white", width=25, command=self.Window.destroy)
 
 
-        # DROPDOWN-LISTEN 
+        # DROPDOWN-LISTEN
+        mannschaften = crawlTeam(2017, 1)
         var1 = tk.StringVar()
-        self.dropdown1= tk.OptionMenu(self.Window, var1, "Augsburg", "Berlin", "Bremen", "Dortmund", "Düsseldorf", "Frankfurt", "Freiburg", "Gladbach", "Hannover", "Hoffenheim", "Leipzig", "Leverkusen", "Mainz", "München", "Nürnberg", "Schalke", "Stuttgart", "Wolfsburg")
-        var1.set("Augsburg")
+        self.dropdown1= tk.OptionMenu(self.Window, var1, mannschaften[0], mannschaften[1], mannschaften[2], mannschaften[3], mannschaften[4], mannschaften[5], mannschaften[6], mannschaften[7], mannschaften[8], mannschaften[9], mannschaften[10], mannschaften[11], mannschaften[12], mannschaften[13], mannschaften[14], mannschaften[15], mannschaften[16], mannschaften[17])
+        var1.set(mannschaften[0])
         #var1.get()
         var2 = tk.StringVar()
-        self.dropdown2= tk.OptionMenu(self.Window, var2, "Augsburg", "Berlin", "Bremen", "Dortmund", "Düsseldorf", "Frankfurt", "Freiburg", "Gladbach", "Hannover", "Hoffenheim", "Leipzig", "Leverkusen", "Mainz", "München", "Nürnberg", "Schalke", "Stuttgart", "Wolfsburg")
-        var2.set("Berlin")
+        self.dropdown2= tk.OptionMenu(self.Window, var2, mannschaften[0], mannschaften[1], mannschaften[2], mannschaften[3], mannschaften[4], mannschaften[5], mannschaften[6], mannschaften[7], mannschaften[8], mannschaften[9], mannschaften[10], mannschaften[11], mannschaften[12], mannschaften[13], mannschaften[14], mannschaften[15], mannschaften[16], mannschaften[17])
+        var2.set(mannschaften[1])
         #var2.get()
 
 
@@ -36,34 +82,35 @@ class GUI:
         self.labelHeim = tk.Label(self.Window, text = "\nHeim:", width=25)
         self.labelGast = tk.Label(self.Window, text = "\nGast:", width=25)
 
+        kommendeMannschaften = crawlTeam(aktuellesJahr, kommenderSpieltag)
         self.LabelkommenderSpieltag= tk.Label(self.Window, text="Der kommende Spieltag:", width=25)
-        self.heim1 = tk.Label(self.Window, text="crawlHeim1", width=25)
-        self.gast1 = tk.Label(self.Window, text="crawlGast1", width=25)
-        self.erg1 = tk.Label(self.Window, text="W(crawlHeim1,crawlGast1)", width=25)
-        self.heim2 = tk.Label(self.Window, text="crawlHeim2", width=25)
-        self.gast2 = tk.Label(self.Window, text="crawlGast2", width=25)
-        self.erg2 = tk.Label(self.Window, text="W(crawlHeim2,crawlGast2)", width=25)
-        self.heim3 = tk.Label(self.Window, text="crawlHeim3", width=25)
-        self.gast3 = tk.Label(self.Window, text="crawlGast3", width=25)
-        self.erg3 = tk.Label(self.Window, text="W(crawlHeim3,crawlGast3)", width=25)
-        self.heim4 = tk.Label(self.Window, text="crawlHeim4", width=25)
-        self.gast4 = tk.Label(self.Window, text="crawlGast4", width=25)
-        self.erg4 = tk.Label(self.Window, text="W(crawlHeim4,crawlGast4)", width=25)
-        self.heim5 = tk.Label(self.Window, text="crawlHeim5", width=25)
-        self.gast5 = tk.Label(self.Window, text="crawlGast5", width=25)
-        self.erg5 = tk.Label(self.Window, text="W(crawlHeim5,crawlGast5)", width=25)
-        self.heim6 = tk.Label(self.Window, text="crawlHeim5", width=25)
-        self.gast6 = tk.Label(self.Window, text="crawlGast6", width=25)
-        self.erg6 = tk.Label(self.Window, text="W(crawlHeim6,crawlGast6)", width=25)
-        self.heim7 = tk.Label(self.Window, text="crawlHeim7", width=25)
-        self.gast7 = tk.Label(self.Window, text="crawlGast7", width=25)
-        self.erg7 = tk.Label(self.Window, text="W(crawlHeim7,crawlGast7)", width=25)
-        self.heim8 = tk.Label(self.Window, text="crawlHeim8", width=25)
-        self.gast8 = tk.Label(self.Window, text="crawlGast8", width=25)
-        self.erg8 = tk.Label(self.Window, text="W(crawlHeim8,crawlGast8)", width=25)
-        self.heim9 = tk.Label(self.Window, text="crawlHeim9", width=25)
-        self.gast9 = tk.Label(self.Window, text="crawlGast9", width=25)
-        self.erg9 = tk.Label(self.Window, text="W(crawlHeim9,crawlGast9)", width=25)
+        self.heim1 = tk.Label(self.Window, text=kommendeMannschaften[0], width=25)
+        self.gast1 = tk.Label(self.Window, text=kommendeMannschaften[1], width=25)
+        self.erg1 = tk.Label(self.Window, text="W "+kommendeMannschaften[0]+ " - "+kommendeMannschaften[1], width=25)
+        self.heim2 = tk.Label(self.Window, text=kommendeMannschaften[2], width=25)
+        self.gast2 = tk.Label(self.Window, text=kommendeMannschaften[3], width=25)
+        self.erg2 = tk.Label(self.Window, text="W "+kommendeMannschaften[2]+ " - "+kommendeMannschaften[3], width=25)
+        self.heim3 = tk.Label(self.Window, text=kommendeMannschaften[4], width=25)
+        self.gast3 = tk.Label(self.Window, text=kommendeMannschaften[5], width=25)
+        self.erg3 = tk.Label(self.Window, text="W "+kommendeMannschaften[4]+ " - "+kommendeMannschaften[5], width=25)
+        self.heim4 = tk.Label(self.Window, text=kommendeMannschaften[6], width=25)
+        self.gast4 = tk.Label(self.Window, text=kommendeMannschaften[7], width=25)
+        self.erg4 = tk.Label(self.Window, text="W "+kommendeMannschaften[6]+ " - "+kommendeMannschaften[7], width=25)
+        self.heim5 = tk.Label(self.Window, text=kommendeMannschaften[8], width=25)
+        self.gast5 = tk.Label(self.Window, text=kommendeMannschaften[9], width=25)
+        self.erg5 = tk.Label(self.Window, text="W "+kommendeMannschaften[8]+ " - "+kommendeMannschaften[9], width=25)
+        self.heim6 = tk.Label(self.Window, text=kommendeMannschaften[10], width=25)
+        self.gast6 = tk.Label(self.Window, text=kommendeMannschaften[11], width=25)
+        self.erg6 = tk.Label(self.Window, text="W "+kommendeMannschaften[10]+ " - "+kommendeMannschaften[11], width=25)
+        self.heim7 = tk.Label(self.Window, text=kommendeMannschaften[12], width=25)
+        self.gast7 = tk.Label(self.Window, text=kommendeMannschaften[13], width=25)
+        self.erg7 = tk.Label(self.Window, text="W "+kommendeMannschaften[12]+ " - "+kommendeMannschaften[13], width=25)
+        self.heim8 = tk.Label(self.Window, text=kommendeMannschaften[14], width=25)
+        self.gast8 = tk.Label(self.Window, text=kommendeMannschaften[15], width=25)
+        self.erg8 = tk.Label(self.Window, text="W "+kommendeMannschaften[14]+ " - "+kommendeMannschaften[15], width=25)
+        self.heim9 = tk.Label(self.Window, text=kommendeMannschaften[16], width=25)
+        self.gast9 = tk.Label(self.Window, text=kommendeMannschaften[17], width=25)
+        self.erg9 = tk.Label(self.Window, text="W "+kommendeMannschaften[16]+ " - "+kommendeMannschaften[17], width=25)
         self.ueberschrift = tk.Label(self.Window, text="Vorhersage-System für die Bundesliga\n", font='Arial 20 bold')
 
 
@@ -117,8 +164,7 @@ class GUI:
         wkt = str(wahrscheinlichkeitNumber)
         self.label.config(text=wkt)
 
-
-        #def crawlTeam...
+        
 
 gui = GUI()
 gui.Window.mainloop()
