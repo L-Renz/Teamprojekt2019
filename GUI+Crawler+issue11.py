@@ -308,10 +308,10 @@ class GUI:
                                          mannschaften[7], mannschaften[8] , mannschaften[9] , mannschaften[10],
                                         mannschaften[11], mannschaften[12], mannschaften[13], mannschaften[14],
                                         mannschaften[15], mannschaften[16], mannschaften[17])
-        
-        
-        
-        
+
+
+
+
         self.var2 = tk.StringVar()
         self.var2.set(mannschaften[1])
         self.dropdown2 = tk.OptionMenu(self.Window, self.var2, mannschaften[0] , mannschaften[1] , mannschaften[2],
@@ -319,18 +319,18 @@ class GUI:
                                          mannschaften[7], mannschaften[8] , mannschaften[9] , mannschaften[10],
                                         mannschaften[11], mannschaften[12], mannschaften[13], mannschaften[14],
                                         mannschaften[15], mannschaften[16], mannschaften[17])
-        
-        
+
+
 
         # Label
         self.labelUnentschieden = tk.Label(self.Window, text="Unentschieden:")
         self.labelGewinnHeim = tk.Label(self.Window, text="Gewinn Heim:")
         self.labelVerlustGast = tk.Label(self.Window, text="Gewinn Gast:")
-        
+
         self.labelUnentschiedenNum = tk.Label(self.Window, text="?")
         self.labelGewinnHeimNum = tk.Label(self.Window, text="?")
         self.labelVerlustGastNum = tk.Label(self.Window, text="?")
-        
+
         #self.label = tk.Label(self.Window, text="?")
         self.labelHeim = tk.Label(self.Window, text="\nHeim:", width=25)
         self.labelGast = tk.Label(self.Window, text="\nGast:", width=25)
@@ -339,39 +339,57 @@ class GUI:
         self.LabelkommenderSpieltag = tk.Label(self.Window, text="Der kommende Spieltag:", width=25)
         self.heim1 = tk.Label(self.Window, text=kommendeMannschaften[0], width=25)
         self.gast1 = tk.Label(self.Window, text=kommendeMannschaften[1], width=25)
-        self.erg1 = tk.Label(self.Window, text="W " + kommendeMannschaften[0] + " - " + kommendeMannschaften[1],
+        self.erg1 = tk.Label(self.Window, text=str(Gewinnwahrscheinlichkeit(kommendeMannschaften[0], kommendeMannschaften[1])[0])
+                                               + " - " + str(Gewinnwahrscheinlichkeit(kommendeMannschaften[0], kommendeMannschaften[1])[1])
+                                               + " - " + str(Gewinnwahrscheinlichkeit(kommendeMannschaften[0], kommendeMannschaften[1])[2]),
                              width=25)
         self.heim2 = tk.Label(self.Window, text=kommendeMannschaften[2], width=25)
         self.gast2 = tk.Label(self.Window, text=kommendeMannschaften[3], width=25)
-        self.erg2 = tk.Label(self.Window, text="W " + kommendeMannschaften[2] + " - " + kommendeMannschaften[3],
+        self.erg2 = tk.Label(self.Window, text=str(Gewinnwahrscheinlichkeit(kommendeMannschaften[2], kommendeMannschaften[3])[0])
+                                               + " - " + str(Gewinnwahrscheinlichkeit(kommendeMannschaften[2], kommendeMannschaften[3])[1])
+                                               + " - " + str(Gewinnwahrscheinlichkeit(kommendeMannschaften[2], kommendeMannschaften[3])[2]),
                              width=25)
         self.heim3 = tk.Label(self.Window, text=kommendeMannschaften[4], width=25)
         self.gast3 = tk.Label(self.Window, text=kommendeMannschaften[5], width=25)
-        self.erg3 = tk.Label(self.Window, text="W " + kommendeMannschaften[4] + " - " + kommendeMannschaften[5],
+        self.erg3 = tk.Label(self.Window, text=str(Gewinnwahrscheinlichkeit(kommendeMannschaften[4], kommendeMannschaften[5])[0])
+                                               + " - " + str(Gewinnwahrscheinlichkeit(kommendeMannschaften[4], kommendeMannschaften[5])[1])
+                                               + " - " + str(Gewinnwahrscheinlichkeit(kommendeMannschaften[4], kommendeMannschaften[5])[2]),
                              width=25)
         self.heim4 = tk.Label(self.Window, text=kommendeMannschaften[6], width=25)
         self.gast4 = tk.Label(self.Window, text=kommendeMannschaften[7], width=25)
-        self.erg4 = tk.Label(self.Window, text="W " + kommendeMannschaften[6] + " - " + kommendeMannschaften[7],
+        self.erg4 = tk.Label(self.Window, text=str(Gewinnwahrscheinlichkeit(kommendeMannschaften[6], kommendeMannschaften[7])[0])
+                                               + " - " + str(Gewinnwahrscheinlichkeit(kommendeMannschaften[6], kommendeMannschaften[7])[1])
+                                               + " - " + str(Gewinnwahrscheinlichkeit(kommendeMannschaften[6], kommendeMannschaften[7])[2]),
                              width=25)
         self.heim5 = tk.Label(self.Window, text=kommendeMannschaften[8], width=25)
         self.gast5 = tk.Label(self.Window, text=kommendeMannschaften[9], width=25)
-        self.erg5 = tk.Label(self.Window, text="W " + kommendeMannschaften[8] + " - " + kommendeMannschaften[9],
+        self.erg5 = tk.Label(self.Window, text=str(Gewinnwahrscheinlichkeit(kommendeMannschaften[8], kommendeMannschaften[9])[0])
+                                               + " - " + str(Gewinnwahrscheinlichkeit(kommendeMannschaften[8], kommendeMannschaften[9])[1])
+                                               + " - " + str(Gewinnwahrscheinlichkeit(kommendeMannschaften[8], kommendeMannschaften[9])[2]),
                              width=25)
         self.heim6 = tk.Label(self.Window, text=kommendeMannschaften[10], width=25)
         self.gast6 = tk.Label(self.Window, text=kommendeMannschaften[11], width=25)
-        self.erg6 = tk.Label(self.Window, text="W " + kommendeMannschaften[10] + " - " + kommendeMannschaften[11],
+        self.erg6 = tk.Label(self.Window, text=str(Gewinnwahrscheinlichkeit(kommendeMannschaften[10], kommendeMannschaften[11])[0])
+                                               + " - " + str(Gewinnwahrscheinlichkeit(kommendeMannschaften[10], kommendeMannschaften[11])[1])
+                                               + " - " + str(Gewinnwahrscheinlichkeit(kommendeMannschaften[10], kommendeMannschaften[11])[2]),
                              width=25)
         self.heim7 = tk.Label(self.Window, text=kommendeMannschaften[12], width=25)
         self.gast7 = tk.Label(self.Window, text=kommendeMannschaften[13], width=25)
-        self.erg7 = tk.Label(self.Window, text="W " + kommendeMannschaften[12] + " - " + kommendeMannschaften[13],
+        self.erg7 = tk.Label(self.Window, text=str(Gewinnwahrscheinlichkeit(kommendeMannschaften[12], kommendeMannschaften[13])[0])
+                                               + " - " + str(Gewinnwahrscheinlichkeit(kommendeMannschaften[12], kommendeMannschaften[13])[1])
+                                               + " - " + str(Gewinnwahrscheinlichkeit(kommendeMannschaften[12], kommendeMannschaften[13])[2]),
                              width=25)
         self.heim8 = tk.Label(self.Window, text=kommendeMannschaften[14], width=25)
         self.gast8 = tk.Label(self.Window, text=kommendeMannschaften[15], width=25)
-        self.erg8 = tk.Label(self.Window, text="W " + kommendeMannschaften[14] + " - " + kommendeMannschaften[15],
+        self.erg8 = tk.Label(self.Window, text=str(Gewinnwahrscheinlichkeit(kommendeMannschaften[14], kommendeMannschaften[15])[0])
+                                               + " - " + str(Gewinnwahrscheinlichkeit(kommendeMannschaften[14], kommendeMannschaften[15])[1])
+                                               + " - " + str(Gewinnwahrscheinlichkeit(kommendeMannschaften[14], kommendeMannschaften[15])[2]),
                              width=25)
         self.heim9 = tk.Label(self.Window, text=kommendeMannschaften[16], width=25)
         self.gast9 = tk.Label(self.Window, text=kommendeMannschaften[17], width=25)
-        self.erg9 = tk.Label(self.Window, text="W " + kommendeMannschaften[16] + " - " + kommendeMannschaften[17],
+        self.erg9 = tk.Label(self.Window, text=str(Gewinnwahrscheinlichkeit(kommendeMannschaften[16], kommendeMannschaften[17])[0])
+                                               + " - " + str(Gewinnwahrscheinlichkeit(kommendeMannschaften[16], kommendeMannschaften[17])[1])
+                                               + " - " + str(Gewinnwahrscheinlichkeit(kommendeMannschaften[16], kommendeMannschaften[17])[2]),
                              width=25)
         self.ueberschrift = tk.Label(self.Window, text="Vorhersage-System für die Bundesliga\n", font='Arial 20 bold')
 
@@ -385,13 +403,13 @@ class GUI:
         self.dropdown1.grid(column=0, row=21)
         self.dropdown2.grid(column=1, row=21)
         self.calculateButton.grid(column=2, row=21)
-        self.labelUnentschieden.grid(column=2, row=22)
-        self.labelGewinnHeim.grid(column=2, row=23)
+        self.labelGewinnHeim.grid(column=2, row=22)
+        self.labelUnentschieden.grid(column=2, row=23)
         self.labelVerlustGast.grid(column=2, row=24)
-        self.labelUnentschiedenNum.grid(column=3, row=22)
-        self.labelGewinnHeimNum.grid(column=3, row=23)
+        self.labelGewinnHeimNum.grid(column=3, row=22)
+        self.labelUnentschiedenNum.grid(column=3, row=23)
         self.labelVerlustGastNum.grid(column=3, row=24)
-        
+
         self.ueberschrift.grid(column=0, row=0, columnspan=3)
 
         spieltag = 50
@@ -433,18 +451,18 @@ class GUI:
         else :
             self.checkbutton1.config(variable=self.MV.set(1))
 
-            
+
     def changeCheckbutton2(self):
         if self.MV.get()==1:
            self.checkbutton2.config(variable=self.MLA.set(0))
         else :
             self.checkbutton2.config(variable=self.MLA.set(1))
-        
+
     # Platzhalter: Minimaler Vorhersage-Algorithmus
     def predict(self):
         if self.MV.get()==1:
            Liste = Gewinnwahrscheinlichkeit (self.var1.get(),self.var2.get())
-        
+
            self.labelGewinnHeimNum.config(text=str(Liste[0]))
            self.labelUnentschiedenNum.config(text=str(Liste[1]))
            self.labelVerlustGastNum.config(text=str(Liste[2]))
@@ -452,6 +470,6 @@ class GUI:
             self.labelGewinnHeimNum.config(text="?")
             self.labelUnentschiedenNum.config(text="?")
             self.labelVerlustGastNum.config(text="?")
-        
+
 gui = GUI()
 gui.Window.mainloop()
