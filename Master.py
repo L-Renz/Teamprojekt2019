@@ -336,22 +336,14 @@ class GUI:
         mannschaften = crawlTeam(2017, 1)
         self.var1 = tk.StringVar()
         self.var1.set(mannschaften[0])
-        self.dropdown1 = tk.OptionMenu(self.Window, self.var1, mannschaften[0] , mannschaften[1] , mannschaften[2],
-                                         mannschaften[3], mannschaften[4] , mannschaften[5] , mannschaften[6],
-                                         mannschaften[7], mannschaften[8] , mannschaften[9] , mannschaften[10],
-                                        mannschaften[11], mannschaften[12], mannschaften[13], mannschaften[14],
-                                        mannschaften[15], mannschaften[16], mannschaften[17])
+        self.dropdown1 = tk.OptionMenu(self.Window, self.var1, *mannschaften)
 
 
 
 
         self.var2 = tk.StringVar()
         self.var2.set(mannschaften[1])
-        self.dropdown2 = tk.OptionMenu(self.Window, self.var2, mannschaften[0] , mannschaften[1] , mannschaften[2],
-                                         mannschaften[3], mannschaften[4] , mannschaften[5] , mannschaften[6],
-                                         mannschaften[7], mannschaften[8] , mannschaften[9] , mannschaften[10],
-                                        mannschaften[11], mannschaften[12], mannschaften[13], mannschaften[14],
-                                        mannschaften[15], mannschaften[16], mannschaften[17])
+        self.dropdown2 = tk.OptionMenu(self.Window, self.var2, *mannschaften)
 
         # Entries
         self.VonSaisonEntry = tk.Entry(self.Window)
@@ -503,12 +495,17 @@ class GUI:
         BisSaison = self.BisSaisonEntry.get()
         VonTag = self.VonTagEntry.get()
         BisTag = self.BisTagEntry.get()
-        #Todo: Binde Funktion ein, die Eingaben auf Korrektheit testet und die gewünschten Daten aus Datenbank holt...
-        Schranken = Schnittstelle(int(VonSaison), int(VonTag), int(BisSaison), int(BisTag))
-        if Schranken[0] == -1:
-            self.ErrorLabel.config(text="out of range")
+        if VonSaison.isdigit() and BisSaison.isdigit() and VonTag.isdigit() and BisTag.isdigit(): 
+           #Todo: Binde Funktion ein, die Eingaben auf Korrektheit testet und die gewünschten Daten aus Datenbank holt...
+           Schranken = Schnittstelle(int(VonSaison), int(VonTag), int(BisSaison), int(BisTag))
+           print(Schranken[0])
+           print(Schranken[1])
+           if Schranken[0] == -1:
+               self.ErrorLabel.config(text="Saison zwischen 2009 und 2018, Tag zwischen 1 und 34")
+           else:
+               self.ErrorLabel.config(text="")
         else:
-            self.ErrorLabel.config(text="")
+            self.ErrorLabel.config(text="Eingaben müssen Zahlen sein")
           
 
     # Verwendet entweder Minimaler Vorhersage-Algo (MV) oder Machine-Learning-Algo (MLA)
