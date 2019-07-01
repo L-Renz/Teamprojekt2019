@@ -1,6 +1,8 @@
 from sqlalchemy import exists
 import sqlalchemy
 
+import sys
+
 print(sqlalchemy.__version__)
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy import Column, Integer, String
@@ -69,17 +71,6 @@ def SpieltageCounter(a):#########
         i = i + 1
     session.commit()
 
-'''
-# while schleife von allen spieltagen; zählt alle Spieltage einer Saison hoch
-def SpieltageCounter():
-    i = 1
-    while i < 35:
-        Spieltaglink = ("https://www.openligadb.de/api/getmatchdata/bl1/2017/") + str(i)
-        r = requests.get(Spieltaglink)
-        y = json.loads(r.text)
-        AusgabeEinesSpieltages(y)
-        i = i + 1
-'''
 
 # Wertet einen Spieltag aus: While-Schleife von 1 -9 für alle Spiele eines Spieltages; i= counter
 def AusgabeEinesSpieltages(y):
@@ -175,13 +166,17 @@ AnzahlSpieleGesamt = session.query(Spiele).count()
 
 #Auswahl der Daten von (Saison v, Spieltag w) bis (Saison x, Spieltag y)
 def Schnittstelle (v, w, x, y):########
-    untereSchranke = (v - 2009) * 306 + (w - 1) *9
-    obereSchranke = (x - 2009) * 306 + (y - 1) * 9 + 8
-    #UntereID= Spiel_zugriff[untereSchranke].id
-    #ObereID= Spiel_zugriff[obereSchranke].id
-    if ((AnzahlSpieleGesamt - 1) < obereSchranke ):
-        return (-1 , -1)#"out of ", "range"
-    return ( untereSchranke , obereSchranke)
+    if v < 2009 or v > aktuellesJahr or x < 2009 or x > aktuellesJahr or w < 1 or y < 1 or w > 34 or y > 34:
+       return (-1 , -1)
+    else:
+       untereSchranke = (v - 2009) * 306 + (w - 1) *9
+       obereSchranke = (x - 2009) * 306 + (y - 1) * 9 + 8
+       #UntereID= Spiel_zugriff[untereSchranke].id
+       #ObereID= Spiel_zugriff[obereSchranke].id
+       print(AnzahlSpieleGesamt)
+       if ((AnzahlSpieleGesamt - 1) < obereSchranke ) or (obereSchranke < untereSchranke):
+           return (-1 , -1)#"out of ", "range"
+       return (untereSchranke, obereSchranke)
 
 
 def Gewinnwahrscheinlichkeit(Team1, Team2):
@@ -260,6 +255,12 @@ import tkinter as tk
 import requests
 import json
 
+aktuellesJahr = 2017
+aktuellerSpieltag = 2
+kommenderSpieltag = (aktuellerSpieltag + 1)
+
+
+# abfangen: aktuellerSpieltag=34 +1
 
 def crawlTeam(Jahr, Spieltag):
     # enthält Teams einer Saison
@@ -297,51 +298,13 @@ def crawlTeam(Jahr, Spieltag):
     return TeamListe
 
 
-import datetime
-
-# damit die Begegnungen des nächsten Spieltags angezeigt werden können, muss man die aktuelle Saison finden
-def berechneAktuelleSaison():
-    # aktuelles Datum
-    now = datetime.datetime.now()
-    j = now.year
-    m = now.month
-    # je nach dem, ob es vor oder nach August ist, ist man in versch. Saisons
-    if m >= 8:
-        return j
-    else:
-        return j-1
-aktuellesJahr = berechneAktuelleSaison()
-
-
-# damit die Begegnungen des nächsten Spieltags angezeigt werden können, muss man den Spieltag finden
-def berechneAktuellerSpieltag():
-    r = requests.get("https://www.openligadb.de/api/getmatchdata/bl1/")
-    y = json.loads(r.text)
-    p = y[0]
-    a = dict.get(p, "Group")
-    spieltag = dict.get(a, "GroupOrderID")
-    return spieltag
-aktuellerSpieltag = berechneAktuellerSpieltag()
-
-# berechne nächsten Spieltag
-def berechneKommenderSpieltag():
-    if aktuellerSpieltag<34:
-        return (aktuellerSpieltag + 1)
-    else:
-        global aktuellesJahr
-        aktuellesJahr = aktuellesJahr + 1
-        return 1
-kommenderSpieltag = berechneKommenderSpieltag()
-
-
-
 class GUI:
     def __init__(self):
         self.Window = tk.Tk()
         self.Window.title('Teamprojekt 19: Vorhersagesystem')
+        #self.Window.configure(background='white')
 
         # Buttons:
-
         # Crawler
         self.crawlerbutton = tk.Button(self.Window, text='\nStarte Crawler\n', fg='black',bg="grey", width=10, height=1 , command=Spieltagsjahre)########
 
@@ -364,28 +327,27 @@ class GUI:
         self.MLA.set(0)
         self.checkbutton2 = tk.Checkbutton(self.Window, text='Machine Learning Algorithmus', variable=self.MLA, command=self.changeCheckbutton1) 
 
-        # DROPDOWN-LISTEN
-        mannschaften = crawlTeam(2017, 1)
+        # Dropdown-Listen
+        mannschaften = crawlTeam(aktuellesJahr, aktuellerSpieltag)
         self.var1 = tk.StringVar()
         self.var1.set(mannschaften[0])
         self.dropdown1 = tk.OptionMenu(self.Window, self.var1, *mannschaften)
-
-
-
 
         self.var2 = tk.StringVar()
         self.var2.set(mannschaften[1])
         self.dropdown2 = tk.OptionMenu(self.Window, self.var2, *mannschaften)
 
+        
         # Entries
+        # Entries um Teildatensatz zum Trainieren des Machine-Learning-Algos auswählen zu können
         self.VonSaisonEntry = tk.Entry(self.Window)
-        self.VonSaisonEntry.insert(10,"2017")
+        self.VonSaisonEntry.insert(10,"2009")
         self.BisSaisonEntry = tk.Entry(self.Window)
-        self.BisSaisonEntry.insert(10,"2018")
+        self.BisSaisonEntry.insert(10,"2015")
         self.VonTagEntry = tk.Entry(self.Window)
         self.VonTagEntry.insert(10,"1")
         self.BisTagEntry = tk.Entry(self.Window)
-        self.BisTagEntry.insert(10,"34")
+        self.BisTagEntry.insert(10,"4")
         
 
         # Label
@@ -402,7 +364,6 @@ class GUI:
         self.labelGewinnHeimNum = tk.Label(self.Window, text="?")
         self.labelVerlustGastNum = tk.Label(self.Window, text="?")
 
-        #self.label = tk.Label(self.Window, text="?")
         self.labelHeim = tk.Label(self.Window, text="\nHeim:", width=25)
         self.labelGast = tk.Label(self.Window, text="\nGast:", width=25)
 
@@ -457,7 +418,7 @@ class GUI:
         self.labelWähleDatensatz.grid(column=4,row=0)
         self.ErrorLabel.grid(column=4,row=4)
         self.VonSaisonEntry.grid(column=4,row=1)
-        self.BisSaisonEntry.grid(column=4,row=2)######
+        self.BisSaisonEntry.grid(column=4,row=2)
         self.VonTagEntry.grid(column=5,row=1)
         self.BisTagEntry.grid(column=5,row=2)
         
@@ -528,11 +489,9 @@ class GUI:
         VonTag = self.VonTagEntry.get()
         BisTag = self.BisTagEntry.get()
         if VonSaison.isdigit() and BisSaison.isdigit() and VonTag.isdigit() and BisTag.isdigit(): 
-           #Todo: Binde Funktion ein, die Eingaben auf Korrektheit testet und die gewünschten Daten aus Datenbank holt...
+           #Todo: Binde Funktion ein, die gewünschten Daten aus Datenbank holt...
            Schranken = Schnittstelle(int(VonSaison), int(VonTag), int(BisSaison), int(BisTag))
-           print(Schranken[0])
-           print(Schranken[1])
-           if Schranken[0] == -1:
+           if Schranken[0] < 0:
                self.ErrorLabel.config(text="Saison zwischen 2009 und 2018, Tag zwischen 1 und 34")
            else:
                self.ErrorLabel.config(text="")
@@ -543,11 +502,16 @@ class GUI:
     # Verwendet entweder Minimaler Vorhersage-Algo (MV) oder Machine-Learning-Algo (MLA)
     def predict(self):
         if self.MV.get()==1:
-           Liste = Gewinnwahrscheinlichkeit (self.var1.get(),self.var2.get())
+           if self.var1.get() == self.var2.get():#Dasselbe Team soll nicht gegen sich selbst spielen können
+              self.labelGewinnHeimNum.config(text="Error: dasselbe Team ausgewählt")
+              self.labelUnentschiedenNum.config(text="")
+              self.labelVerlustGastNum.config(text="")
+           else:
+              Liste = Gewinnwahrscheinlichkeit (self.var1.get(),self.var2.get())
 
-           self.labelGewinnHeimNum.config(text=str(Liste[0]))
-           self.labelUnentschiedenNum.config(text=str(Liste[1]))
-           self.labelVerlustGastNum.config(text=str(Liste[2]))
+              self.labelGewinnHeimNum.config(text=str(Liste[0]))
+              self.labelUnentschiedenNum.config(text=str(Liste[1]))
+              self.labelVerlustGastNum.config(text=str(Liste[2]))
         else: #Todo: hier MLA einbinden...
             self.labelGewinnHeimNum.config(text="?")
             self.labelUnentschiedenNum.config(text="?")
