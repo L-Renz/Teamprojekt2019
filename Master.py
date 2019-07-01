@@ -260,12 +260,6 @@ import tkinter as tk
 import requests
 import json
 
-aktuellesJahr = 2017
-aktuellerSpieltag = 2
-kommenderSpieltag = (aktuellerSpieltag + 1)
-
-
-# abfangen: aktuellerSpieltag=34 +1
 
 def crawlTeam(Jahr, Spieltag):
     # enthält Teams einer Saison
@@ -301,6 +295,44 @@ def crawlTeam(Jahr, Spieltag):
 
         i = i + 1
     return TeamListe
+
+
+import datetime
+
+# damit die Begegnungen des nächsten Spieltags angezeigt werden können, muss man die aktuelle Saison finden
+def berechneAktuelleSaison():
+    # aktuelles Datum
+    now = datetime.datetime.now()
+    j = now.year
+    m = now.month
+    # je nach dem, ob es vor oder nach August ist, ist man in versch. Saisons
+    if m >= 8:
+        return j
+    else:
+        return j-1
+aktuellesJahr = berechneAktuelleSaison()
+
+
+# damit die Begegnungen des nächsten Spieltags angezeigt werden können, muss man den Spieltag finden
+def berechneAktuellerSpieltag():
+    r = requests.get("https://www.openligadb.de/api/getmatchdata/bl1/")
+    y = json.loads(r.text)
+    p = y[0]
+    a = dict.get(p, "Group")
+    spieltag = dict.get(a, "GroupOrderID")
+    return spieltag
+aktuellerSpieltag = berechneAktuellerSpieltag()
+
+# berechne nächsten Spieltag
+def berechneKommenderSpieltag():
+    if aktuellerSpieltag<34:
+        return (aktuellerSpieltag + 1)
+    else:
+        global aktuellesJahr
+        aktuellesJahr = aktuellesJahr + 1
+        return 1
+kommenderSpieltag = berechneKommenderSpieltag()
+
 
 
 class GUI:
