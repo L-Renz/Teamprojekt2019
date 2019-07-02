@@ -1,6 +1,8 @@
 from sqlalchemy import exists
 import sqlalchemy
 
+import sys
+
 print(sqlalchemy.__version__)
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy import Column, Integer, String
@@ -69,17 +71,6 @@ def SpieltageCounter(a):#########
         i = i + 1
     session.commit()
 
-'''
-# while schleife von allen spieltagen; zählt alle Spieltage einer Saison hoch
-def SpieltageCounter():
-    i = 1
-    while i < 35:
-        Spieltaglink = ("https://www.openligadb.de/api/getmatchdata/bl1/2017/") + str(i)
-        r = requests.get(Spieltaglink)
-        y = json.loads(r.text)
-        AusgabeEinesSpieltages(y)
-        i = i + 1
-'''
 
 # Wertet einen Spieltag aus: While-Schleife von 1 -9 für alle Spiele eines Spieltages; i= counter
 def AusgabeEinesSpieltages(y):
@@ -175,13 +166,17 @@ AnzahlSpieleGesamt = session.query(Spiele).count()
 
 #Auswahl der Daten von (Saison v, Spieltag w) bis (Saison x, Spieltag y)
 def Schnittstelle (v, w, x, y):########
-    untereSchranke = (v - 2009) * 306 + (w - 1) *9
-    obereSchranke = (x - 2009) * 306 + (y - 1) * 9 + 8
-    #UntereID= Spiel_zugriff[untereSchranke].id
-    #ObereID= Spiel_zugriff[obereSchranke].id
-    if ((AnzahlSpieleGesamt - 1) < obereSchranke ):
-        return (-1 , -1)#"out of ", "range"
-    return ( untereSchranke , obereSchranke)
+    if v < 2009 or v > aktuellesJahr or x < 2009 or x > aktuellesJahr or w < 1 or y < 1 or w > 34 or y > 34:
+        return (-1 , -1)
+    else:
+        untereSchranke = (v - 2009) * 306 + (w - 1) *9
+        obereSchranke = (x - 2009) * 306 + (y - 1) * 9 + 8
+        #UntereID= Spiel_zugriff[untereSchranke].id
+        #ObereID= Spiel_zugriff[obereSchranke].id
+        print(AnzahlSpieleGesamt)
+        if ((AnzahlSpieleGesamt - 1) < obereSchranke )  or (obereSchranke < untereSchranke):
+            return (-1 , -1)#"out of ", "range"
+        return ( untereSchranke , obereSchranke)
 
 
 def Gewinnwahrscheinlichkeit(Team1, Team2):
@@ -375,13 +370,13 @@ class GUI:
 
         # Entries
         self.VonSaisonEntry = tk.Entry(self.Window)
-        self.VonSaisonEntry.insert(10,"2017")
+        self.VonSaisonEntry.insert(10,"2009")
         self.BisSaisonEntry = tk.Entry(self.Window)
-        self.BisSaisonEntry.insert(10,"2018")
+        self.BisSaisonEntry.insert(10,"2015")
         self.VonTagEntry = tk.Entry(self.Window)
         self.VonTagEntry.insert(10,"1")
         self.BisTagEntry = tk.Entry(self.Window)
-        self.BisTagEntry.insert(10,"34")
+        self.BisTagEntry.insert(10,"4")
 
 
         # Label
@@ -446,7 +441,7 @@ class GUI:
         self.labelWähleDatensatz.grid(column=4,row=0)
         self.ErrorLabel.grid(column=4,row=4)
         self.VonSaisonEntry.grid(column=4,row=1)
-        self.BisSaisonEntry.grid(column=4,row=2)######
+        self.BisSaisonEntry.grid(column=4,row=2)
         self.VonTagEntry.grid(column=5,row=1)
         self.BisTagEntry.grid(column=5,row=2)
 
@@ -518,9 +513,7 @@ class GUI:
         if VonSaison.isdigit() and BisSaison.isdigit() and VonTag.isdigit() and BisTag.isdigit():
            #Todo: Binde Funktion ein, die Eingaben auf Korrektheit testet und die gewünschten Daten aus Datenbank holt...
            Schranken = Schnittstelle(int(VonSaison), int(VonTag), int(BisSaison), int(BisTag))
-           print(Schranken[0])
-           print(Schranken[1])
-           if Schranken[0] == -1:
+           if Schranken[0] < 0:
                self.ErrorLabel.config(text="Saison zwischen 2009 und 2018, Tag zwischen 1 und 34")
            else:
                self.ErrorLabel.config(text="")
@@ -531,11 +524,15 @@ class GUI:
     # Verwendet entweder Minimaler Vorhersage-Algo (MV) oder Machine-Learning-Algo (MLA)
     def predict(self):
         if self.MV.get()==1:
-           Liste = Gewinnwahrscheinlichkeit (self.var1.get(),self.var2.get())
-
-           self.labelGewinnHeimNum.config(text=str(Liste[0]))
-           self.labelUnentschiedenNum.config(text=str(Liste[1]))
-           self.labelVerlustGastNum.config(text=str(Liste[2]))
+            if self.var1.get() == self.var2.get():#Dasselbe Team soll nicht gegen sich selbst spielen können
+                self.labelGewinnHeimNum.config(text="Error: dasselbe Team ausgewählt")
+                self.labelUnentschiedenNum.config(text="")
+                self.labelVerlustGastNum.config(text="")
+            else:
+                Liste = Gewinnwahrscheinlichkeit (self.var1.get(),self.var2.get())
+                self.labelGewinnHeimNum.config(text=str(Liste[0]))
+                self.labelUnentschiedenNum.config(text=str(Liste[1]))
+                self.labelVerlustGastNum.config(text=str(Liste[2]))
         else: #Todo: hier MLA einbinden...
             self.labelGewinnHeimNum.config(text="?")
             self.labelUnentschiedenNum.config(text="?")
