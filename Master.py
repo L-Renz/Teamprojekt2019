@@ -1,8 +1,6 @@
 from sqlalchemy import exists
 import sqlalchemy
 
-import sys
-
 print(sqlalchemy.__version__)
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy import Column, Integer, String
@@ -71,6 +69,17 @@ def SpieltageCounter(a):#########
         i = i + 1
     session.commit()
 
+'''
+# while schleife von allen spieltagen; zählt alle Spieltage einer Saison hoch
+def SpieltageCounter():
+    i = 1
+    while i < 35:
+        Spieltaglink = ("https://www.openligadb.de/api/getmatchdata/bl1/2017/") + str(i)
+        r = requests.get(Spieltaglink)
+        y = json.loads(r.text)
+        AusgabeEinesSpieltages(y)
+        i = i + 1
+'''
 
 # Wertet einen Spieltag aus: While-Schleife von 1 -9 für alle Spiele eines Spieltages; i= counter
 def AusgabeEinesSpieltages(y):
@@ -166,17 +175,13 @@ AnzahlSpieleGesamt = session.query(Spiele).count()
 
 #Auswahl der Daten von (Saison v, Spieltag w) bis (Saison x, Spieltag y)
 def Schnittstelle (v, w, x, y):########
-    if v < 2009 or v > aktuellesJahr or x < 2009 or x > aktuellesJahr or w < 1 or y < 1 or w > 34 or y > 34:
-       return (-1 , -1)
-    else:
-       untereSchranke = (v - 2009) * 306 + (w - 1) *9
-       obereSchranke = (x - 2009) * 306 + (y - 1) * 9 + 8
-       #UntereID= Spiel_zugriff[untereSchranke].id
-       #ObereID= Spiel_zugriff[obereSchranke].id
-       print(AnzahlSpieleGesamt)
-       if ((AnzahlSpieleGesamt - 1) < obereSchranke ) or (obereSchranke < untereSchranke):
-           return (-1 , -1)#"out of ", "range"
-       return (untereSchranke, obereSchranke)
+    untereSchranke = (v - 2009) * 306 + (w - 1) *9
+    obereSchranke = (x - 2009) * 306 + (y - 1) * 9 + 8
+    #UntereID= Spiel_zugriff[untereSchranke].id
+    #ObereID= Spiel_zugriff[obereSchranke].id
+    if ((AnzahlSpieleGesamt - 1) < obereSchranke ):
+        return (-1 , -1)#"out of ", "range"
+    return ( untereSchranke , obereSchranke)
 
 
 def Gewinnwahrscheinlichkeit(Team1, Team2):
@@ -255,13 +260,6 @@ import tkinter as tk
 import requests
 import json
 
-aktuellesJahr = 2017
-aktuellerSpieltag = 2
-kommenderSpieltag = (aktuellerSpieltag + 1)
-
-
-# abfangen: aktuellerSpieltag=34 +1
-
 def crawlTeam(Jahr, Spieltag):
     # enthält Teams einer Saison
     TeamListe = []
@@ -298,13 +296,51 @@ def crawlTeam(Jahr, Spieltag):
     return TeamListe
 
 
+
+import datetime
+
+# damit die Begegnungen des nächsten Spieltags angezeigt werden können, muss man die aktuelle Saison finden
+def berechneAktuelleSaison():
+    # aktuelles Datum
+    now = datetime.datetime.now()
+    j = now.year
+    m = now.month
+    # je nach dem, ob es vor oder nach August ist, ist man in versch. Saisons
+    if m >= 8:
+        return j
+    else:
+        return j-1
+aktuellesJahr = berechneAktuelleSaison()
+
+
+# damit die Begegnungen des nächsten Spieltags angezeigt werden können, muss man den Spieltag finden
+def berechneAktuellerSpieltag():
+    r = requests.get("https://www.openligadb.de/api/getmatchdata/bl1/")
+    y = json.loads(r.text)
+    p = y[0]
+    a = dict.get(p, "Group")
+    spieltag = dict.get(a, "GroupOrderID")
+    return spieltag
+aktuellerSpieltag = berechneAktuellerSpieltag()
+
+# berechne nächsten Spieltag
+def berechneKommenderSpieltag():
+    if aktuellerSpieltag<34:
+        return (aktuellerSpieltag + 1)
+    else:
+        global aktuellesJahr
+        aktuellesJahr = aktuellesJahr + 1
+        return 1
+kommenderSpieltag = berechneKommenderSpieltag()
+
+
 class GUI:
     def __init__(self):
         self.Window = tk.Tk()
         self.Window.title('Teamprojekt 19: Vorhersagesystem')
-        #self.Window.configure(background='white')
 
         # Buttons:
+
         # Crawler
         self.crawlerbutton = tk.Button(self.Window, text='\nStarte Crawler\n', fg='black',bg="grey", width=10, height=1 , command=Spieltagsjahre)########
 
@@ -322,12 +358,12 @@ class GUI:
         #Auswählleiste
         self.MV = tk.IntVar()
         self.MV.set(1)
-        self.checkbutton1= tk.Checkbutton(self.Window, text='Minimaler Vorhersagealgorithmus', variable=self.MV, command=self.changeCheckbutton2) 
+        self.checkbutton1= tk.Checkbutton(self.Window, text='Minimaler Vorhersagealgorithmus', variable=self.MV, command=self.changeCheckbutton2)
         self.MLA = tk.IntVar()
         self.MLA.set(0)
-        self.checkbutton2 = tk.Checkbutton(self.Window, text='Machine Learning Algorithmus', variable=self.MLA, command=self.changeCheckbutton1) 
+        self.checkbutton2 = tk.Checkbutton(self.Window, text='Machine Learning Algorithmus', variable=self.MLA, command=self.changeCheckbutton1)
 
-        # Dropdown-Listen
+        # DROPDOWN-LISTEN
         mannschaften = crawlTeam(aktuellesJahr, aktuellerSpieltag)
         self.var1 = tk.StringVar()
         self.var1.set(mannschaften[0])
@@ -337,25 +373,25 @@ class GUI:
         self.var2.set(mannschaften[1])
         self.dropdown2 = tk.OptionMenu(self.Window, self.var2, *mannschaften)
 
-        
         # Entries
-        # Entries um Teildatensatz zum Trainieren des Machine-Learning-Algos auswählen zu können
         self.VonSaisonEntry = tk.Entry(self.Window)
-        self.VonSaisonEntry.insert(10,"2009")
+        self.VonSaisonEntry.insert(10,"2017")
         self.BisSaisonEntry = tk.Entry(self.Window)
-        self.BisSaisonEntry.insert(10,"2015")
+        self.BisSaisonEntry.insert(10,"2018")
         self.VonTagEntry = tk.Entry(self.Window)
         self.VonTagEntry.insert(10,"1")
         self.BisTagEntry = tk.Entry(self.Window)
-        self.BisTagEntry.insert(10,"4")
-        
+        self.BisTagEntry.insert(10,"34")
+
 
         # Label
+        self.ueberschrift = tk.Label(self.Window, text="Bundesliga-Vorhersage \n", font='Arial 20 bold')
+
         self.labelWähleDatensatz = tk.Label(self.Window, text="Wähle Datensatz:")
         self.labelVon = tk.Label(self.Window, text="Von Saison, Spieltag:")
         self.labelBis = tk.Label(self.Window, text="Bis Saison, Spieltag:")
         self.ErrorLabel = tk.Label(self.Window, text="", fg = "red")
-        
+
         self.labelUnentschieden = tk.Label(self.Window, text="Unentschieden:")
         self.labelGewinnHeim = tk.Label(self.Window, text="Gewinn Heim:")
         self.labelVerlustGast = tk.Label(self.Window, text="Gewinn Gast:")
@@ -364,48 +400,38 @@ class GUI:
         self.labelGewinnHeimNum = tk.Label(self.Window, text="?")
         self.labelVerlustGastNum = tk.Label(self.Window, text="?")
 
+        #self.label = tk.Label(self.Window, text="?")
         self.labelHeim = tk.Label(self.Window, text="\nHeim:", width=25)
         self.labelGast = tk.Label(self.Window, text="\nGast:", width=25)
 
-        kommendeMannschaften = crawlTeam(aktuellesJahr, kommenderSpieltag)
         self.LabelkommenderSpieltag = tk.Label(self.Window, text="Der kommende Spieltag:", width=25)
-        self.heim1 = tk.Label(self.Window, text=kommendeMannschaften[0], width=25)
-        self.gast1 = tk.Label(self.Window, text=kommendeMannschaften[1], width=25)
-        self.erg1 = tk.Label(self.Window, text=predictNext(kommendeMannschaften[0], kommendeMannschaften[1]),width=55)
-
-        self.heim2 = tk.Label(self.Window, text=kommendeMannschaften[2], width=25)
-        self.gast2 = tk.Label(self.Window, text=kommendeMannschaften[3], width=25)
-        self.erg2 = tk.Label(self.Window, text=predictNext(kommendeMannschaften[2], kommendeMannschaften[3]),width=55)
-
-        self.heim3 = tk.Label(self.Window, text=kommendeMannschaften[4], width=25)
-        self.gast3 = tk.Label(self.Window, text=kommendeMannschaften[5], width=25)
-        self.erg3 = tk.Label(self.Window, text=predictNext(kommendeMannschaften[4], kommendeMannschaften[5]),width=55)
-
-        self.heim4 = tk.Label(self.Window, text=kommendeMannschaften[6], width=25)
-        self.gast4 = tk.Label(self.Window, text=kommendeMannschaften[7], width=25)
-        self.erg4 = tk.Label(self.Window, text=predictNext(kommendeMannschaften[6], kommendeMannschaften[7]),width=55)
-
-        self.heim5 = tk.Label(self.Window, text=kommendeMannschaften[8], width=25)
-        self.gast5 = tk.Label(self.Window, text=kommendeMannschaften[9], width=25)
-        self.erg5 = tk.Label(self.Window, text=predictNext(kommendeMannschaften[8], kommendeMannschaften[9]),width=55)
-
-        self.heim6 = tk.Label(self.Window, text=kommendeMannschaften[10], width=25)
-        self.gast6 = tk.Label(self.Window, text=kommendeMannschaften[11], width=25)
-        self.erg6 = tk.Label(self.Window, text=predictNext(kommendeMannschaften[10], kommendeMannschaften[11]),width=55)
-
-        self.heim7 = tk.Label(self.Window, text=kommendeMannschaften[12], width=25)
-        self.gast7 = tk.Label(self.Window, text=kommendeMannschaften[13], width=25)
-        self.erg7 = tk.Label(self.Window, text=predictNext(kommendeMannschaften[12], kommendeMannschaften[13]),width=55)
-
-        self.heim8 = tk.Label(self.Window, text=kommendeMannschaften[14], width=25)
-        self.gast8 = tk.Label(self.Window, text=kommendeMannschaften[15], width=25)
-        self.erg8 = tk.Label(self.Window, text=predictNext(kommendeMannschaften[14], kommendeMannschaften[15]),width=55)
-
-        self.heim9 = tk.Label(self.Window, text=kommendeMannschaften[16], width=25)
-        self.gast9 = tk.Label(self.Window, text=kommendeMannschaften[17], width=25)
-        self.erg9 = tk.Label(self.Window, text=predictNext(kommendeMannschaften[16], kommendeMannschaften[17]),width=55)
-
-        self.ueberschrift = tk.Label(self.Window, text="Bundesliga-Vorhersage \n", font='Arial 20 bold')
+        self.heim1 = None
+        self.gast1 = None
+        self.erg1 = None
+        self.heim2 = None
+        self.gast2 = None
+        self.erg2 = None
+        self.heim3 = None
+        self.gast3 = None
+        self.erg3 = None
+        self.heim4 = 0
+        self.gast4 = 0
+        self.erg4 = 0
+        self.heim5 = 0
+        self.gast5 = 0
+        self.erg5 = 0
+        self.heim6 = 0
+        self.gast6 = 0
+        self.erg6 = 0
+        self.heim7 = 0
+        self.gast7 = 0
+        self.erg7 = 0
+        self.heim8 = 0
+        self.gast8 = 0
+        self.erg8 = 0
+        self.heim9 = 0
+        self.gast9 = 0
+        self.erg9 = 0
 
         # Postition in Grid festlegen
         self.crawlerbutton.grid(column=0, row=1, sticky='W')
@@ -413,15 +439,17 @@ class GUI:
         self.checkbutton1.grid(column=1,row=1, sticky='W')
         self.checkbutton2.grid(column=1,row=2, sticky='W')
 
+        self.LabelkommenderSpieltag.grid(column=0,row=50)
+
         self.labelVon.grid(column=3,row=1)
         self.labelBis.grid(column=3,row=2)
         self.labelWähleDatensatz.grid(column=4,row=0)
         self.ErrorLabel.grid(column=4,row=4)
         self.VonSaisonEntry.grid(column=4,row=1)
-        self.BisSaisonEntry.grid(column=4,row=2)
+        self.BisSaisonEntry.grid(column=4,row=2)######
         self.VonTagEntry.grid(column=5,row=1)
         self.BisTagEntry.grid(column=5,row=2)
-        
+
         self.labelHeim.grid(column=0, row=20)
         self.labelGast.grid(column=1, row=20)
         self.dropdown1.grid(column=0, row=21)
@@ -435,40 +463,39 @@ class GUI:
         self.labelVerlustGastNum.grid(column=3, row=24)
 
         self.ueberschrift.grid(column=0, row=0, columnspan=3)
-
-        spieltag = 50
-        self.LabelkommenderSpieltag.grid(column=0, row=spieltag)
-        self.heim1.grid(column=0, row=spieltag + 1)
-        self.gast1.grid(column=1, row=spieltag + 1)
-        self.erg1.grid(column=2, row=spieltag + 1)
-        self.heim2.grid(column=0, row=spieltag + 2)
-        self.gast2.grid(column=1, row=spieltag + 2)
-        self.erg2.grid(column=2, row=spieltag + 2)
-        self.heim3.grid(column=0, row=spieltag + 3)
-        self.gast3.grid(column=1, row=spieltag + 3)
-        self.erg3.grid(column=2, row=spieltag + 3)
-        self.heim4.grid(column=0, row=spieltag + 4)
-        self.gast4.grid(column=1, row=spieltag + 4)
-        self.erg4.grid(column=2, row=spieltag + 4)
-        self.heim5.grid(column=0, row=spieltag + 5)
-        self.gast5.grid(column=1, row=spieltag + 5)
-        self.erg5.grid(column=2, row=spieltag + 5)
-        self.heim6.grid(column=0, row=spieltag + 6)
-        self.gast6.grid(column=1, row=spieltag + 6)
-        self.erg6.grid(column=2, row=spieltag + 6)
-        self.heim7.grid(column=0, row=spieltag + 7)
-        self.gast7.grid(column=1, row=spieltag + 7)
-        self.erg7.grid(column=2, row=spieltag + 7)
-        self.heim8.grid(column=0, row=spieltag + 8)
-        self.gast8.grid(column=1, row=spieltag + 8)
-        self.erg8.grid(column=2, row=spieltag + 8)
-        self.heim9.grid(column=0, row=spieltag + 9)
-        self.gast9.grid(column=1, row=spieltag + 9)
-        self.erg9.grid(column=2, row=spieltag + 9)
-
         self.closebutton.grid(column=5, row=100)
 
-    # Wenn ein Checkbutton aktiviert ist, soll der andere automatisch deaktiviert sein
+        # definiere/befülle die Labels des kommenden Spieltages
+        def erstelleKommenderSpieltag():
+            kommendeMannschaften = crawlTeam(aktuellesJahr, kommenderSpieltag)
+            labelNames = [self.heim1, self.gast1, self.erg1, self.heim2, self.gast2, self.erg2, self.heim3, self.gast3, self.erg3,self.heim4, self.gast4, self.erg4, self.heim5, self.gast5, self.erg5, self.heim6, self.gast6, self.erg6, self.heim7, self.gast7, self.erg7, self.heim8, self.gast8, self.erg8, self.heim9, self.gast9, self.erg9]
+            i = 0
+            j = 0
+            k = 1
+
+            #definiere Reihe ab der die Labels angezeigt werden sollen
+            spieltag = 50
+
+            # definiere korrekte Labels und Labelpositionen
+            while i < 18:
+
+                labelNames[j] = tk.Label(self.Window, text=kommendeMannschaften[i], width=25).grid(column=0, row=spieltag + k)
+                j = j+1
+
+                labelNames[j] = tk.Label(self.Window, text=kommendeMannschaften[i+1], width=25).grid(column=1, row=spieltag + k)
+                j = j+1
+
+                labelNames[j] = tk.Label(self.Window, text=predictNext(kommendeMannschaften[i], kommendeMannschaften[i+1]),width=55).grid(column=2, row=spieltag + k)
+
+                j = j+1
+                k = k+1
+                i = i+2
+        erstelleKommenderSpieltag()
+
+
+
+
+        # Wenn ein Checkbutton aktiviert ist, soll der andere automatisch deaktiviert sein
     def changeCheckbutton1(self):
         if self.MLA.get()==1:
            self.checkbutton1.config(variable=self.MV.set(0))
@@ -488,34 +515,32 @@ class GUI:
         BisSaison = self.BisSaisonEntry.get()
         VonTag = self.VonTagEntry.get()
         BisTag = self.BisTagEntry.get()
-        if VonSaison.isdigit() and BisSaison.isdigit() and VonTag.isdigit() and BisTag.isdigit(): 
-           #Todo: Binde Funktion ein, die gewünschten Daten aus Datenbank holt...
+        if VonSaison.isdigit() and BisSaison.isdigit() and VonTag.isdigit() and BisTag.isdigit():
+           #Todo: Binde Funktion ein, die Eingaben auf Korrektheit testet und die gewünschten Daten aus Datenbank holt...
            Schranken = Schnittstelle(int(VonSaison), int(VonTag), int(BisSaison), int(BisTag))
-           if Schranken[0] < 0:
+           print(Schranken[0])
+           print(Schranken[1])
+           if Schranken[0] == -1:
                self.ErrorLabel.config(text="Saison zwischen 2009 und 2018, Tag zwischen 1 und 34")
            else:
                self.ErrorLabel.config(text="")
         else:
             self.ErrorLabel.config(text="Eingaben müssen Zahlen sein")
-          
+
 
     # Verwendet entweder Minimaler Vorhersage-Algo (MV) oder Machine-Learning-Algo (MLA)
     def predict(self):
         if self.MV.get()==1:
-           if self.var1.get() == self.var2.get():#Dasselbe Team soll nicht gegen sich selbst spielen können
-              self.labelGewinnHeimNum.config(text="Error: dasselbe Team ausgewählt")
-              self.labelUnentschiedenNum.config(text="")
-              self.labelVerlustGastNum.config(text="")
-           else:
-              Liste = Gewinnwahrscheinlichkeit (self.var1.get(),self.var2.get())
+           Liste = Gewinnwahrscheinlichkeit (self.var1.get(),self.var2.get())
 
-              self.labelGewinnHeimNum.config(text=str(Liste[0]))
-              self.labelUnentschiedenNum.config(text=str(Liste[1]))
-              self.labelVerlustGastNum.config(text=str(Liste[2]))
+           self.labelGewinnHeimNum.config(text=str(Liste[0]))
+           self.labelUnentschiedenNum.config(text=str(Liste[1]))
+           self.labelVerlustGastNum.config(text=str(Liste[2]))
         else: #Todo: hier MLA einbinden...
             self.labelGewinnHeimNum.config(text="?")
             self.labelUnentschiedenNum.config(text="?")
             self.labelVerlustGastNum.config(text="?")
+
 
 
 # gibt String aus, mit dem wahrscheinlichsten Ergebnis und allen 3 Wahrscheinlichkeiten
