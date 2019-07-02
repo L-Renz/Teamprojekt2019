@@ -358,7 +358,7 @@ class GUI:
         self.MLA.set(0)
         self.checkbutton2 = tk.Checkbutton(self.Window, text='Machine Learning Algorithmus', variable=self.MLA, command=self.changeCheckbutton1)
 
-        # DROPDOWN-LISTEN
+        # Dropdown-Listen
         mannschaften = crawlTeam(aktuellesJahr, aktuellerSpieltag)
         self.var1 = tk.StringVar()
         self.var1.set(mannschaften[0])
@@ -369,6 +369,7 @@ class GUI:
         self.dropdown2 = tk.OptionMenu(self.Window, self.var2, *mannschaften)
 
         # Entries
+        # Entries um Teildatensatz zum Trainieren des Machine-Learning-Algos auswählen zu können
         self.VonSaisonEntry = tk.Entry(self.Window)
         self.VonSaisonEntry.insert(10,"2009")
         self.BisSaisonEntry = tk.Entry(self.Window)
@@ -395,7 +396,6 @@ class GUI:
         self.labelGewinnHeimNum = tk.Label(self.Window, text="?")
         self.labelVerlustGastNum = tk.Label(self.Window, text="?")
 
-        #self.label = tk.Label(self.Window, text="?")
         self.labelHeim = tk.Label(self.Window, text="\nHeim:", width=25)
         self.labelGast = tk.Label(self.Window, text="\nGast:", width=25)
 
@@ -511,7 +511,7 @@ class GUI:
         VonTag = self.VonTagEntry.get()
         BisTag = self.BisTagEntry.get()
         if VonSaison.isdigit() and BisSaison.isdigit() and VonTag.isdigit() and BisTag.isdigit():
-           #Todo: Binde Funktion ein, die Eingaben auf Korrektheit testet und die gewünschten Daten aus Datenbank holt...
+           #Todo: Binde Funktion ein, die gewünschten Daten aus Datenbank holt...
            Schranken = Schnittstelle(int(VonSaison), int(VonTag), int(BisSaison), int(BisTag))
            if Schranken[0] < 0:
                self.ErrorLabel.config(text="Saison zwischen 2009 und 2018, Tag zwischen 1 und 34")
