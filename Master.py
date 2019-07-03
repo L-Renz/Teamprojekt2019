@@ -300,23 +300,49 @@ def berechneAktuelleSaison():
     now = datetime.datetime.now()
     j = now.year
     m = now.month
-    # je nach dem, ob es vor oder nach August ist, ist man in versch. Saisons
-    if m >= 8:
-        return j+1
+    # je nach dem, ob es vor oder nach Juli ist, ist man in versch. Saisons
+    if m >= 7:
+        return j
     else:
         return j
 aktuellesJahr = berechneAktuelleSaison()
 
 
+# beziehe Daten der Startseite unserer Datenquelle
+r = requests.get("https://www.openligadb.de/api/getmatchdata/bl1/")
+y = json.loads(r.text)
+p = y[0]
+
+
+
+# überprüft ob auf der Startseite, der aktuelle spieltag agezeigt wird
+def oldbMatchIsFinished ():
+    global p
+    a = dict.get(p, "MatchIsFinished")
+    if (a == True):
+        return True
+    else:
+        return False
+
+
 # damit die Begegnungen des nächsten Spieltags angezeigt werden können, muss man den Spieltag finden
 def berechneAktuellerSpieltag():
-    r = requests.get("https://www.openligadb.de/api/getmatchdata/bl1/")
-    y = json.loads(r.text)
-    p = y[0]
+    global p
     a = dict.get(p, "Group")
     spieltag = dict.get(a, "GroupOrderID")
-    return spieltag
+    b = oldbMatchIsFinished()
+    if (b == True):
+        return spieltag
+    else:
+        if (spieltag - 1) > 0:
+            return (spieltag - 1)
+        else:
+            global aktuellesJahr
+            aktuellesJahr = aktuellesJahr - 1
+            return 34
+
 aktuellerSpieltag = berechneAktuellerSpieltag()
+
 
 # berechne nächsten Spieltag
 def berechneKommenderSpieltag():
