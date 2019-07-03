@@ -300,49 +300,23 @@ def berechneAktuelleSaison():
     now = datetime.datetime.now()
     j = now.year
     m = now.month
-    # je nach dem, ob es vor oder nach Juli ist, ist man in versch. Saisons
-    if m >= 7:
-        return j
+    # je nach dem, ob es vor oder nach August ist, ist man in versch. Saisons
+    if m >= 8:
+        return j+1
     else:
         return j
 aktuellesJahr = berechneAktuelleSaison()
 
 
-# beziehe Daten der Startseite unserer Datenquelle
-r = requests.get("https://www.openligadb.de/api/getmatchdata/bl1/")
-y = json.loads(r.text)
-p = y[0]
-
-
-
-# überprüft ob auf der Startseite, der aktuelle spieltag agezeigt wird
-def oldbMatchIsFinished ():
-    global p
-    a = dict.get(p, "MatchIsFinished")
-    if (a == True):
-        return True
-    else:
-        return False
-
-
 # damit die Begegnungen des nächsten Spieltags angezeigt werden können, muss man den Spieltag finden
 def berechneAktuellerSpieltag():
-    global p
+    r = requests.get("https://www.openligadb.de/api/getmatchdata/bl1/")
+    y = json.loads(r.text)
+    p = y[0]
     a = dict.get(p, "Group")
     spieltag = dict.get(a, "GroupOrderID")
-    b = oldbMatchIsFinished()
-    if (b == True):
-        return spieltag
-    else:
-        if (spieltag - 1) > 0:
-            return (spieltag - 1)
-        else:
-            global aktuellesJahr
-            aktuellesJahr = aktuellesJahr - 1
-            return 34
-
+    return spieltag
 aktuellerSpieltag = berechneAktuellerSpieltag()
-
 
 # berechne nächsten Spieltag
 def berechneKommenderSpieltag():
@@ -363,7 +337,7 @@ class GUI:
         # Buttons:
 
         # Crawler
-        self.crawlerbutton = tk.Button(self.Window, text='\nStarte Crawler\n', fg='black',bg="grey", width=10, height=1 , command=Spieltagsjahre)########
+        self.crawlerbutton = tk.Button(self.Window, text='\nStarte Crawler\n', fg='black',bg="grey", width=10, height=1 , command=CrawlHelper)########
 
         # Training
         self.trainingbutton = tk.Button(self.Window, text='\nStarte Machine-Learning-Training\n', fg='black', bg="grey", width=30, height=1, command=self.starteMachineLearningTraining)
@@ -587,6 +561,12 @@ def predictNext(Team1, Team2):
         else:
             return "keine Daten in der Datenbank"
 
+def CrawlHelper():
+    Spieltagsjahre()
+    gui.Window.update()
+    gui.Window.mainloop()
 
 gui = GUI()
 gui.Window.mainloop()
+
+
