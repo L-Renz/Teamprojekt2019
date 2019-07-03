@@ -248,7 +248,7 @@ def Gewinnwahrscheinlichkeit(Team1, Team2):
         return ErgebnisWahrscheinlichkeiten
 
     else:
-        return "keine 10 ergebnisse, Falscher Name ?"
+        return list((0, 0, 0))
 
 
 import tkinter as tk
@@ -302,9 +302,9 @@ def berechneAktuelleSaison():
     m = now.month
     # je nach dem, ob es vor oder nach August ist, ist man in versch. Saisons
     if m >= 8:
-        return j
+        return j+1
     else:
-        return j-1
+        return j
 aktuellesJahr = berechneAktuelleSaison()
 
 
@@ -544,14 +544,22 @@ class GUI:
 def predictNext(Team1, Team2):
         Liste = Gewinnwahrscheinlichkeit(Team1, Team2)
 
-        if Liste[0] >= Liste[1] and Liste[0] >= Liste[2]:
+
+        if (int(Liste[0])+ int(Liste[2]) + int(Liste[1]) <  10):
+            return "keine Daten in der Datenbank"
+
+        elif Liste[0] >= Liste[1] and Liste[0] >= Liste[2]:
             return str(Liste[0]) + "% " + "Heimsieg: " + str(Liste[0]) + " - " + str(Liste[1]) + " - " + str(Liste[2])
 
         elif Liste[2] >= Liste[0] and Liste[2] >= Liste[1]:
             return str(Liste[2]) + "% " + "Auswärtssieg: " + str(Liste[0]) + " - " + str(Liste[1]) + " - " + str(Liste[2])
 
+        elif Liste[1] >= Liste[0] and Liste[1] >= Liste[2]:
+            return str(Liste[1]) + "% " + "Unentschieden: " + str(Liste[0]) + " - " + str(Liste[1]) + " - " + str(
+                Liste[2])
+
         else:
-            return str(Liste[1]) + "% " + "Unentschieden: " + str(Liste[0]) + " - " + str(Liste[1]) + " - " + str(Liste[2])
+            return "keine Daten in der Datenbank"
 
 
 gui = GUI()
