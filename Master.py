@@ -254,6 +254,7 @@ def Gewinnwahrscheinlichkeit(Team1, Team2):
 import tkinter as tk
 import requests
 import json
+import itertools
 
 def crawlTeam(Jahr, Spieltag):
     # enthält Teams einer Saison
@@ -491,28 +492,17 @@ class GUI:
         # definiere/befülle die Labels des kommenden Spieltages
         def erstelleKommenderSpieltag():
             kommendeMannschaften = crawlTeam(aktuellesJahr, kommenderSpieltag)
-            labelNames = [self.heim1, self.gast1, self.erg1, self.heim2, self.gast2, self.erg2, self.heim3, self.gast3, self.erg3,self.heim4, self.gast4, self.erg4, self.heim5, self.gast5, self.erg5, self.heim6, self.gast6, self.erg6, self.heim7, self.gast7, self.erg7, self.heim8, self.gast8, self.erg8, self.heim9, self.gast9, self.erg9]
-            i = 0
-            j = 0
-            k = 1
-
-            #definiere Reihe ab der die Labels angezeigt werden sollen
-            spieltag = 50
-
-            # definiere korrekte Labels und Labelpositionen
-            while i < 18:
-
-                labelNames[j] = tk.Label(self.Window, text=kommendeMannschaften[i], width=25).grid(column=0, row=spieltag + k)
-                j = j+1
-
-                labelNames[j] = tk.Label(self.Window, text=kommendeMannschaften[i+1], width=25).grid(column=1, row=spieltag + k)
-                j = j+1
-
-                labelNames[j] = tk.Label(self.Window, text=predictNext(kommendeMannschaften[i], kommendeMannschaften[i+1]),width=55).grid(column=2, row=spieltag + k)
-
-                j = j+1
-                k = k+1
-                i = i+2
+            labelNamesHeim = [self.heim1, self.heim2, self.heim3, self.heim4, self.heim5, self.heim6, self.heim7, self.heim8, self.heim9]
+            labelNamesGast = [self.gast1, self.gast2, self.gast3, self.gast4, self.gast5, self.gast6, self.gast7, self.gast8, self.gast9]
+            labelNamesErgebnis = [self.erg1, self.erg2, self.erg3, self.erg4, self.erg5, self.erg6, self.erg7, self.erg8, self.erg9]
+            
+            spieltag = 50 #definiere Reihe ab der die Labels angezeigt werden sollen
+            i=0
+            for (a, b, c) in zip(labelNamesHeim, labelNamesGast, labelNamesErgebnis):
+                a = tk.Label(self.Window, text=kommendeMannschaften[2*i], width=25).grid(column=0, row=spieltag + i+1)
+                b = tk.Label(self.Window, text=kommendeMannschaften[2*i+1], width=25).grid(column=1, row=spieltag + i+1)
+                c = tk.Label(self.Window, text=predictNext(kommendeMannschaften[2*i], kommendeMannschaften[2*i+1]),width=55).grid(column=2, row=spieltag + i+1)
+                i=i+1
         erstelleKommenderSpieltag()
 
 
