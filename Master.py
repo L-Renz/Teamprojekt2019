@@ -292,6 +292,7 @@ def crawlTeam(Jahr, Spieltag):
 
 
 
+
 import datetime
 
 # damit die Begegnungen des nächsten Spieltags angezeigt werden können, muss man die aktuelle Saison finden
@@ -355,6 +356,7 @@ def berechneKommenderSpieltag():
 kommenderSpieltag = berechneKommenderSpieltag()
 
 
+
 class GUI:
     def __init__(self):
         self.Window = tk.Tk()
@@ -363,7 +365,7 @@ class GUI:
         # Buttons:
 
         # Crawler
-        self.crawlerbutton = tk.Button(self.Window, text='\nStarte Crawler\n', fg='black',bg="grey", width=10, height=1 , command=Spieltagsjahre)########
+        self.crawlerbutton = tk.Button(self.Window, text='\nStarte Crawler\n', fg='black',bg="grey", width=10, height=1 , command=CrawlHelper)########
 
         # Training
         self.trainingbutton = tk.Button(self.Window, text='\nStarte Machine-Learning-Training\n', fg='black', bg="grey", width=30, height=1, command=self.starteMachineLearningTraining)
@@ -587,6 +589,10 @@ def predictNext(Team1, Team2):
         else:
             return "keine Daten in der Datenbank"
 
+def CrawlHelper():
+    Spieltagsjahre()
+    gui.Window.update()
+    gui.Window.mainloop()
 
 gui = GUI()
 gui.Window.mainloop()
