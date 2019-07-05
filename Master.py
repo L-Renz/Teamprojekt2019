@@ -497,12 +497,12 @@ class GUI:
             labelNamesErgebnis = [self.erg1, self.erg2, self.erg3, self.erg4, self.erg5, self.erg6, self.erg7, self.erg8, self.erg9]
             
             spieltag = 50 #definiere Reihe ab der die Labels angezeigt werden sollen
-            i=0
-            for (a, b, c) in zip(labelNamesHeim, labelNamesGast, labelNamesErgebnis):
+            
+            for i, (a, b, c) in enumerate(zip(labelNamesHeim, labelNamesGast, labelNamesErgebnis)):
                 a = tk.Label(self.Window, text=kommendeMannschaften[2*i], width=25).grid(column=0, row=spieltag + i+1)
                 b = tk.Label(self.Window, text=kommendeMannschaften[2*i+1], width=25).grid(column=1, row=spieltag + i+1)
                 c = tk.Label(self.Window, text=predictNext(kommendeMannschaften[2*i], kommendeMannschaften[2*i+1]),width=55).grid(column=2, row=spieltag + i+1)
-                i=i+1
+                
         erstelleKommenderSpieltag()
 
 
