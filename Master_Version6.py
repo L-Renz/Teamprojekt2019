@@ -130,6 +130,15 @@ kommenderSpieltag = berechneKommenderSpieltag()
 
 ####################Funktionen für Crawler-Button###########################
 '''
+Funktion CrawlHelper ruft die Funktion CrawlHelper und aktualisiert danach das GUI-Fenster
+arguments: none
+returns: none
+'''
+def CrawlHelper():
+    Spieltagsjahre()
+    gui.Window.update()
+    gui.Window.mainloop()
+'''
 Funktion Spieltagsjahre ruft für jedes Saisonjahr....?
 arguments: none
 returns: none
@@ -386,7 +395,7 @@ class GUI:
         # Buttons:
         # Crawler
         self.crawlerbutton = tk.Button(self.Window, text='\nStarte Crawler\n', fg='black',bg="grey", width=10, height=1 ,
-                                        command=Spieltagsjahre)
+                                        command=CrawlHelper)
 
         # Training
         self.trainingbutton = tk.Button(self.Window, text='\nStarte Machine-Learning-Training\n', fg='black', bg="grey",
