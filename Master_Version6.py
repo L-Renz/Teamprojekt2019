@@ -12,6 +12,9 @@ import tkinter as tk
 import requests
 import itertools
 import datetime
+import numpy as np
+from scipy.optimize import minimize_scalar
+from math import factorial
 
 #Erstellen der Datenbank
 Base = declarative_base()  # Erstellen der Basis
@@ -699,3 +702,84 @@ class GUI:
             self.labelVerlustGastNum.config(text="?")
 gui = GUI()
 gui.Window.mainloop()
+
+
+
+'''
+Funktion crawlTore packt die Tore die zwei Mannschaften gegeneinander geschossen haben in eine Matrix
+arguments: Heim, Gast
+returns: Matrix der Tore
+'''
+
+def crawlTore (Heim, Gast):
+    HeimListe = []
+    GastListe= []
+
+    for x in Spiel_zugriff:
+        if ((x.Heim== Heim) and (x.Gast == Gast)):
+            HeimListe.append(x.ToreHeim)
+            GastListe.append(x.ToreGast)
+
+    toreMatrix = np.array([HeimListe, GastListe])
+    return toreMatrix
+
+
+'''
+Funktion neg_llh definiert eine log-likelihood-Funktion
+arguments: Variable theta, Matrix y
+returns: negative log-likelihood-Funktion
+'''
+
+def neg_llh(theta, y):
+    f = np.sum(y * theta - np.exp(theta))
+    return -f
+
+
+'''
+Funktion W_Matrix berechnet mit Poisson-Regr. die Ergebniswarscheinlichkeiten eines Spiels
+arguments: Heim, Gast
+returns: negative log-likelihood-Funktion
+'''
+
+def W_Matrix(Heim, Gast):
+    goal_probabilities = np.zeros((10, 10))
+    a = crawlTore (Heim, Gast)
+
+    #compute theta for the home-team
+    result_home = minimize_scalar(neg_llh, method='Bounded', bounds=(0., 1000.), args=(a[:, 0]))
+
+    #compute theta for the away-team
+    result_away = minimize_scalar(neg_llh, method='Bounded', bounds=(0., 1000.), args=(a[:, 1]))
+
+    for j in range(10):
+        #Probability for home to score j goals against away as a home-team
+        prob_home = np.exp(-result_home.x) * result_home.x**j / factorial(j)
+        for k in range(10):
+            #Probability for away to score k goals against home as a away-team
+            prob_away = np.exp(-result_away.x) * result_away.x**k / factorial(k)
+            goal_probabilities[j, k] = prob_home * prob_away
+
+    obereDreicksmatrix = np.triu(goal_probabilities, k=1)
+    print("Heimsieg " + Heim + ": " + str(np.sum(obereDreicksmatrix)))
+
+    untereDreicksmatrix = np.tril(goal_probabilities, k=-1)
+    print("Auswärtssieg " + Gast +  ": " +  str(np.sum(untereDreicksmatrix)))
+    print("Unentschieden: " + str(np.sum(goal_probabilities) - np.sum(obereDreicksmatrix) - np.sum(untereDreicksmatrix)))
+    print("Theta1,2: ", str(result_home.x), str(result_away.x))
+    print(str((result_away.x>0.05)
+              and (result_home.x>0.05)
+              and (0.99 < np.sum(goal_probabilities))
+              and (1.01 > np.sum(goal_probabilities))))
+    print("")
+
+
+
+W_Matrix("Hertha BSC", "Eintracht Frankfurt")
+W_Matrix("Hertha BSC", "FC Schalke 04")
+W_Matrix("Hertha BSC", "Werder Bremen")
+W_Matrix("Hertha BSC", "VfL Wolfsburg")
+
+W_Matrix("Eintracht Frankfurt", "Hertha BSC")
+W_Matrix("FC Schalke 04", "Hertha BSC")
+W_Matrix("Werder Bremen", "Hertha BSC")
+W_Matrix("VfL Wolfsburg", "Hertha BSC")
