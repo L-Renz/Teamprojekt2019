@@ -1,16 +1,11 @@
 from sqlalchemy import exists
-import sqlalchemy
-import sys
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy import Column, Integer, String
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
-from sqlalchemy import func
-import requests
 import json
 import tkinter as tk
 import requests
-import itertools
 import datetime
 import numpy as np
 from scipy.optimize import minimize_scalar
@@ -63,9 +58,7 @@ def testeinesSpiels(d):
 
 #Globale Variablen berechnen
 '''
-Funktion berechneAktuelleSaison berechnet die aktuelle Saison
-damit die Begegnungen des nächsten Spieltags angezeigt werden können,
-muss man die aktuelle Saison finden
+Funktion berechneAktuelleSaison findet das Jahr der aktuellen Saison gemäß openligadb.de
 arguments: none
 returns: jahr (int)
 '''
@@ -80,7 +73,7 @@ def berechneAktuelleSaison():
     if monat >= 7:
         return jahr
     else:
-        return jahr
+        return jahr-1
 
 
 # beziehe Daten der Startseite unserer Datenquelle
@@ -297,13 +290,13 @@ def Schnittstelle(v, w, x, y):
 
 #Funktion für Dropdown-Listen
 '''
-Funktion crawlTeam holt die Namen der Teams aus der Datenbank
-arguments: Jahr, Spieltag
+Funktion crawlTeams holt die Namen der Teams aus der Datenbank
+arguments: Jahr (int), Spieltag (int)
 returns: Liste der Teamnamen
 '''
 
 
-def crawlTeam(Jahr, Spieltag):
+def crawlTeams(Jahr, Spieltag):
     # enthält Teams einer Saison
     TeamListe = []
 
@@ -321,42 +314,47 @@ def crawlTeam(Jahr, Spieltag):
         a = dict.get(p, "Team1")
         b = dict.get(a, "TeamName")
         Heim = str(b)
-
         TeamListe.append(Heim)
 
         # Speichere jeweils die Gastmannschaft
         c = dict.get(p, "Team2")
         d = dict.get(c, "TeamName")
         Gast = str(d)
-
         TeamListe.append(Gast)
     return TeamListe
 
 
 #Funktion für Label des kommenden Spieltages
 '''
-Funktion predictNext gibt String aus, der das
-wahrscheinlichsten Ergebnis und die Wahrscheinlichkeiten
+Funktion resultString erzeugt String, der das
+wahrscheinlichste Ergebnis und die Wahrscheinlichkeiten
 für Heimsieg, Auswärtssieg und Unentschieden enthält
-arguments: Team1 (String, Name Heim), Team2 (String, Name Gast)
+arguments: Team1 (String, Name Heim), Team2 (String, Name Gast), Alg(String, Vorhersagealg.)
 returns: String
 '''
 
 
-def predictNext(Team1, Team2):
-    Liste = Gewinnwahrscheinlichkeit(Team1, Team2)
+def resultString(Team1, Team2, Alg):
+
+    if (Alg == "minimal"):
+        Liste = Gewinnwahrscheinlichkeit(Team1, Team2)
+    elif (Alg == "poisson"):
+        Liste = poissonWahrscheinlichkeit(Team1, Team2)
 
     if (int(Liste[0]) + int(Liste[2]) + int(Liste[1]) < 10):
         return "keine Daten in der Datenbank"
 
+    if (Liste[0] > 90 or Liste[2] > 90 or Liste[1] > 90):
+        return "keine Daten in der Datenbank"
+
     elif Liste[0] >= Liste[1] and Liste[0] >= Liste[2]:
-        return str(Liste[0]) + "% " + "Heimsieg: " + str(Liste[0]) + " - " + str(Liste[1]) + " - " + str(Liste[2])
+        return str(Liste[0]) + "% " + "Heimsieg: " + str(Liste[0]) + "% - " + str(Liste[1]) + "% - " + str(Liste[2]) + "% "
 
     elif Liste[2] >= Liste[0] and Liste[2] >= Liste[1]:
-        return str(Liste[2]) + "% " + "Auswärtssieg: " + str(Liste[0]) + " - " + str(Liste[1]) + " - " + str(Liste[2])
+        return str(Liste[2]) + "% " + "Gastsieg: " + str(Liste[0]) + "% - " + str(Liste[1]) + "% - " + str(Liste[2])  + "% "
 
     elif Liste[1] >= Liste[0] and Liste[1] >= Liste[2]:
-        return str(Liste[1]) + "% " + "Unentschieden: " + str(Liste[0]) + " - " + str(Liste[1]) + " - " + str(Liste[2])
+        return str(Liste[1]) + "% " + "Remis: " + str(Liste[0]) + "% - " + str(Liste[1]) + "% - " + str(Liste[2]) + "% "
 
     else:
         return "keine Daten in der Datenbank"
@@ -444,18 +442,21 @@ def Gewinnwahrscheinlichkeit(Team1, Team2):
 
     else:
         return list((0, 0, 0))
+
+
 '''
-Funktion crawlTore packt die Tore, die zwei Mannschaften gegeneinander geschossen haben, in eine Matrix
-arguments: Heim, Gast
-returns: Matrix der Tore
+Funktion crawlTore packt die Tore die zwei Mannschaften gegeneinander geschossen haben in eine Matrix
+arguments: Heim (String), Gast (String)
+returns: numpy array
 '''
+
 
 def crawlTore (Heim, Gast):
     HeimListe = []
-    GastListe= []
+    GastListe = []
 
     for x in Spiel_zugriff:
-        if ((x.Heim== Heim) and (x.Gast == Gast)):
+        if ((x.Heim == Heim) and (x.Gast == Gast)):
             HeimListe.append(x.ToreHeim)
             GastListe.append(x.ToreGast)
 
@@ -464,9 +465,9 @@ def crawlTore (Heim, Gast):
 
 
 '''
-Funktion neg_llh definiert eine log-likelihood-Funktion
+Funktion neg_llh definiert eine log-Likelihood-Funktion
 arguments: Variable theta, Matrix y
-returns: negative log-likelihood-Funktion
+returns: negative log-Likelihood-Funktion
 '''
 
 def neg_llh(theta, y):
@@ -475,48 +476,48 @@ def neg_llh(theta, y):
 
 
 '''
-Funktion W_Matrix berechnet mit Poisson-Regr. die Ergebniswarscheinlichkeiten eines Spiels
-arguments: Heim, Gast
-returns: negative log-likelihood-Funktion
+Funktion poissonWahrscheinlichkeit berechnet mit Poisson-Regr. die Ergebniswarscheinlichkeiten eines Spiels
+arguments: Heim (String), Gast (String)
+returns: ErgebnisWahrscheinlichkeiten
+(dreielementige Liste, die die Gewinnwhkt von Heim, Unentschieden,
+Gewinnwhkt von Gast enthält)
 '''
 
-def W_Matrix(Heim, Gast):
+def poissonWahrscheinlichkeit(Heim, Gast):
     goal_probabilities = np.zeros((10, 10))
-    a = crawlTore (Heim, Gast)
+    a = crawlTore(Heim, Gast).T
 
     #compute theta for the home-team
     result_home = minimize_scalar(neg_llh, method='Bounded', bounds=(0., 1000.), args=(a[:, 0]))
+    #convert theta to lambda:
+    lambda1 = np.exp(-result_home.x)
 
     #compute theta for the away-team
     result_away = minimize_scalar(neg_llh, method='Bounded', bounds=(0., 1000.), args=(a[:, 1]))
+    #convert theta to lambda:
+    lambda2 = np.exp(-result_away.x)
 
     for j in range(10):
         #Probability for home to score j goals against away as a home-team
-        prob_home = np.exp(-result_home.x) * result_home.x**j / factorial(j)
+        prob_home = lambda1**j * np.exp(-lambda1) / factorial(j)
         for k in range(10):
             #Probability for away to score k goals against home as a away-team
-            prob_away = np.exp(-result_away.x) * result_away.x**k / factorial(k)
+            prob_away = np.exp(-lambda2) * lambda2**k / factorial(k)
+            #fill table with probabilities of all results
             goal_probabilities[j, k] = prob_home * prob_away
 
+
     obereDreicksmatrix = np.triu(goal_probabilities, k=1)
-    Heimsieg = np.sum(obereDreicksmatrix)
-    print("Heimsieg " + Heim + ": " + str(Heimsieg))
+    Siegwahrscheinlichkeit_Team1 = round(100 * np.sum(obereDreicksmatrix), 1)
 
     untereDreicksmatrix = np.tril(goal_probabilities, k=-1)
-    Auswärtssieg = np.sum(untereDreicksmatrix)
-    print("Auswärtssieg " + Gast +  ": " +  str(Auswärtssieg))
+    Siegwahrscheinlichkeit_Team2 = round(100 * np.sum(untereDreicksmatrix), 1)
 
-    Unentschieden = goal_probabilities.trace()
-    print("Unentschieden: " + str(Unentschieden))
+    Unentschiedenwahrscheinlichkeit = round(100 - Siegwahrscheinlichkeit_Team1 - Siegwahrscheinlichkeit_Team2, 1)
 
-    Summe = np.sum(goal_probabilities)
-    print("Theta1,2: ", str(result_home.x), str(result_away.x))
-    print(str((result_away.x > 0.05)
-              and (result_home.x > 0.05)
-              and (0.99 < Summe)
-              and (1.01 > Summe)))
-    print("")
-    return Heimsieg * 100, Auswärtssieg * 100, Unentschieden * 100
+    ErgebnisWahrscheinlichkeiten = list(
+        (Siegwahrscheinlichkeit_Team1, Unentschiedenwahrscheinlichkeit, Siegwahrscheinlichkeit_Team2))
+    return ErgebnisWahrscheinlichkeiten
 
 
 
@@ -561,7 +562,7 @@ class GUI:
                                            command=self.changeCheckbutton1)
 
         # Dropdown-Listen
-        mannschaften = crawlTeam(aktuellesJahr, aktuellerSpieltag)
+        mannschaften = crawlTeams(aktuellesJahr, aktuellerSpieltag)
         self.var1 = tk.StringVar()
         self.var1.set(mannschaften[0])
         self.dropdown1 = tk.OptionMenu(self.Window, self.var1, *mannschaften)
@@ -605,30 +606,39 @@ class GUI:
         self.heim1 = None
         self.gast1 = None
         self.erg1 = None
+        self.erg1P = None
         self.heim2 = None
         self.gast2 = None
         self.erg2 = None
+        self.erg2P = None
         self.heim3 = None
         self.gast3 = None
         self.erg3 = None
-        self.heim4 = 0
-        self.gast4 = 0
-        self.erg4 = 0
-        self.heim5 = 0
-        self.gast5 = 0
-        self.erg5 = 0
-        self.heim6 = 0
-        self.gast6 = 0
-        self.erg6 = 0
-        self.heim7 = 0
-        self.gast7 = 0
-        self.erg7 = 0
-        self.heim8 = 0
-        self.gast8 = 0
-        self.erg8 = 0
-        self.heim9 = 0
-        self.gast9 = 0
-        self.erg9 = 0
+        self.erg3P = None
+        self.heim4 = None
+        self.gast4 = None
+        self.erg4 = None
+        self.erg4P = None
+        self.heim5 = None
+        self.gast5 = None
+        self.erg5 = None
+        self.erg5P = None
+        self.heim6 = None
+        self.gast6 = None
+        self.erg6 = None
+        self.erg6P = None
+        self.heim7 = None
+        self.gast7 = None
+        self.erg7 = None
+        self.erg7P = None
+        self.heim8 = None
+        self.gast8 = None
+        self.erg8 = None
+        self.erg8P = None
+        self.heim9 = None
+        self.gast9 = None
+        self.erg9 = None
+        self.erg9P = None
 
         self.erstelleKommenderSpieltag()
 
@@ -670,28 +680,26 @@ class GUI:
     '''
 
     def erstelleKommenderSpieltag(self):
-        kommendeMannschaften = crawlTeam(aktuellesJahr, kommenderSpieltag)
-        labelNamesHeim = [self.heim1, self.heim2,
-                          self.heim3, self.heim4,
-                          self.heim5, self.heim6,
-                          self.heim7, self.heim8,
-                          self.heim9]
-        labelNamesGast = [self.gast1, self.gast2,
-                          self.gast3, self.gast4,
-                          self.gast5, self.gast6,
-                          self.gast7, self.gast8,
-                          self.gast9]
+        kommendeMannschaften = crawlTeams(aktuellesJahr, kommenderSpieltag)
+        labelNamesHeim = [self.heim1, self.heim2, self.heim3, self.heim4, self.heim5,
+                          self.heim6, self.heim7, self.heim8, self.heim9]
+        labelNamesGast = [self.gast1, self.gast2, self.gast3, self.gast4, self.gast5,
+                          self.gast6, self.gast7, self.gast8, self.gast9]
         labelNamesErgebnis = [self.erg1, self.erg2, self.erg3, self.erg4, self.erg5,
                               self.erg6, self.erg7, self.erg8, self.erg9]
+        labelNamesErgPoiss = [self.erg1P, self.erg2P, self.erg3P, self.erg4P, self.erg5P,
+                              self.erg6P, self.erg7P, self.erg8P, self.erg9P]
 
         spieltag = 50
         # definiere Reihe ab der die Labels angezeigt werden sollen
 
-        for i, (a, b, c) in enumerate(zip(labelNamesHeim, labelNamesGast, labelNamesErgebnis)):
+        for i, (a, b, c, d) in enumerate(zip(labelNamesHeim, labelNamesGast, labelNamesErgebnis, labelNamesErgPoiss)):
             a = tk.Label(self.Window, text=kommendeMannschaften[2 * i], width=20).grid(column=0, row=spieltag + i + 1)
             b = tk.Label(self.Window, text=kommendeMannschaften[2 * i + 1], width=20).grid(column=1, row=spieltag + i + 1)
-            c = tk.Label(self.Window, text=predictNext(kommendeMannschaften[2 * i], kommendeMannschaften[2 * i + 1]),
+            c = tk.Label(self.Window, text=resultString(kommendeMannschaften[2 * i], kommendeMannschaften[2 * i + 1], "minimal"),
                          width=30).grid(column=2, row=spieltag + i + 1)
+            d = tk.Label(self.Window, text=resultString(kommendeMannschaften[2 * i], kommendeMannschaften[2 * i + 1], "poisson"),
+                         width=30).grid(column=3, row=spieltag + i + 1)
 
     '''
     Funktion changeCheckbutton1 deaktiviert
@@ -735,7 +743,7 @@ class GUI:
         if VonSaison.isdigit() and BisSaison.isdigit() and VonTag.isdigit() and BisTag.isdigit():
             #Todo: Binde Funktion ein, die die gewünschten Daten aus der Datenbank holt
             Schranken = Schnittstelle(
-                int(VonSaison), int(VonTag), int(BisSaison), int(BisTag))    
+                int(VonSaison), int(VonTag), int(BisSaison), int(BisTag))
             if Schranken[0] < 0:
                 self.ErrorLabel.config(
                     text="Saison zwischen 2009 und 2018,\n Tag zwischen 1 und 34"
@@ -765,22 +773,9 @@ class GUI:
                 self.labelUnentschiedenNum.config(text=str(Liste[1])+"%")
                 self.labelGewinnGastNum.config(text=str(Liste[2])+"%")
             else:
-                Heimsieg, Auswärtssieg, Unentschieden = W_Matrix(self.var1.get(), self.var2.get())
-                self.labelGewinnHeimNum.config(text=str(np.around(Heimsieg, decimals = 4))+"%")
-                self.labelUnentschiedenNum.config(text=str(np.around(Unentschieden, decimals = 4))+"%")
-                self.labelGewinnGastNum.config(text=str(np.around(Auswärtssieg, decimals = 4))+"%")
+                Liste = poissonWahrscheinlichkeit(self.var1.get(), self.var2.get())
+                self.labelGewinnHeimNum.config(text=str(Liste[0])+"%")
+                self.labelUnentschiedenNum.config(text=str(Liste[1])+"%")
+                self.labelGewinnGastNum.config(text=str(Liste[2])+"%")
 gui = GUI()
 gui.Window.mainloop()
-
-'''
-W_Matrix("Hertha BSC", "Eintracht Frankfurt")
-W_Matrix("Hertha BSC", "FC Schalke 04")
-W_Matrix("Hertha BSC", "Werder Bremen")
-W_Matrix("Hertha BSC", "VfL Wolfsburg")
-
-W_Matrix("Eintracht Frankfurt", "Hertha BSC")
-W_Matrix("FC Schalke 04", "Hertha BSC")
-W_Matrix("Werder Bremen", "Hertha BSC")
-W_Matrix("VfL Wolfsburg", "Hertha BSC")
-
-'''
