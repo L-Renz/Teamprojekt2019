@@ -11,9 +11,14 @@ import numpy as np
 from scipy.optimize import minimize_scalar
 from math import factorial
 
-#Erstellen der Datenbank
-Base = declarative_base()  # Erstellen der Basis
+'''
+erstellen einer Datenbank
+In tabellen Form mit den Spalten
+id, Datum, Heim, Gast, ToreHeim, ToreGast,
 
+'''
+
+Base = declarative_base()  # Erstellen der Basis
 
 class Spiele(Base):
     __tablename__ = "spiele"
@@ -48,12 +53,12 @@ session.commit()  # abschließende Aktualisierung
 # Testaufruf einzelner Key eines Spiels
 # Teste alle matchid`s Überprüfung auf doppelte ID`s
 # Test eines Beispiels
-def testeinesSpiels(d):
-    print(Spiel_zugriff[d].id)
-    print(Spiel_zugriff[d].Heim)
-    print(Spiel_zugriff[d].ToreHeim)
-    print(Spiel_zugriff[d].Gast)
-    print(Spiel_zugriff[d].ToreGast)
+def testeinesSpiels(spiel):
+    print(Spiel_zugriff[spiel].id)
+    print(Spiel_zugriff[spiel].Heim)
+    print(Spiel_zugriff[spiel].ToreHeim)
+    print(Spiel_zugriff[spiel].Gast)
+    print(Spiel_zugriff[spiel].ToreGast)
 
 
 #Globale Variablen berechnen
@@ -69,7 +74,7 @@ def berechneAktuelleSaison():
     jahr = now.year
     monat = now.month
     # je nach dem, ob es vor oder nach Juli ist,
-    #ist man in verschiednenen Saisons
+    #ist man in verschiedenen Saisons
     if monat >= 7:
         return jahr
     else:
@@ -91,8 +96,8 @@ returns: boolean
 
 def oldMatchIsFinished():
     global p
-    a = dict.get(p, "MatchIsFinished")
-    if (a == True):
+    matchstatus = dict.get(p, "MatchIsFinished")
+    if matchstatus:
         return True
     else:
         return False
@@ -109,8 +114,8 @@ def berechneAktuellerSpieltag():
     global p
     a = dict.get(p, "Group")
     spieltag = dict.get(a, "GroupOrderID")
-    b = oldMatchIsFinished()
-    if (b == True):
+    matchstatus = oldMatchIsFinished()
+    if matchstatus:
         return spieltag
     else:
         if (spieltag - 1) > 0:
@@ -151,20 +156,20 @@ returns: none
 '''
 
 
-def CrawlHelper():
-    Spieltagsjahre()
+def crawlHelper():
+    spieltagsjahre()
     gui.Window.update()
     gui.Window.mainloop()
 
 
 '''
-Funktion Spieltagsjahre ruft für jedes Saisonjahr....?
+Funktion Spieltagsjahre erstellt für jedes Spieljahr einen Saisonlink
 arguments: none
 returns: den aktuellensaisonlink für die weiter Berechnung des Crawlers
 '''
 
 
-def Spieltagsjahre():
+def spieltagsjahre():
     jahreszahl = 2009
     while jahreszahl < aktuellesJahr:
         saisonlink ="https://www.openligadb.de/api/getmatchdata/bl1/" + str(jahreszahl) + "/"
@@ -185,7 +190,7 @@ def spieltage_counter(saisonlink):
         Spieltaglink = (saisonlink) + str(spieltagszahl)
         linkanfrage = requests.get(Spieltaglink)
         spieldaten = json.loads(linkanfrage.text)
-        AusgabeEinesSpieltages(spieldaten)
+        ausgabeEinesSpieltages(spieldaten)
         spieltagszahl =+ 1
     session.commit()
 
@@ -198,7 +203,7 @@ returns: weitergabe eines einzelnen Spieldatensatzes
 '''
 
 
-def AusgabeEinesSpieltages(spieldaten):
+def ausgabeEinesSpieltages(spieldaten):
     for spiel in spieldaten:
         spielliste_erstellen(spiel)
 
@@ -216,30 +221,30 @@ returns: eine Liste in folgender Form und Daten
 def spielliste_erstellen(spiel):
 
     # Datum aufrufen aus der Liste
-    Datum_L = str(dict.get(spiel, "MatchDateTime"))
+    datum_L = str(dict.get(spiel, "MatchDateTime"))
     # Aufrufen der Heimmanschaft
     a = dict.get(spiel, "Team1")
     b = dict.get(a, "TeamName")
-    Heim_L = str(b)
+    heim_L = str(b)
 
     # Aufrufen der Gastmannschaft
     c = dict.get(spiel, "Team2")
     d = dict.get(c, "TeamName")
-    Gast_L = str(d)
+    gast_L = str(d)
 
     # ToreHeimTeam
-    SpielErgebnis = dict.get(spiel, 'MatchResults')
-    EndErgebnis = SpielErgebnis[1]
-    ToreT1 = dict.get(EndErgebnis, 'PointsTeam1')
-    ToreHeim_L = str(ToreT1)
+    spielErgebnis = dict.get(spiel, 'MatchResults')
+    endErgebnis = spielErgebnis[1]
+    toreT1 = dict.get(endErgebnis, 'PointsTeam1')
+    toreHeim_L = str(toreT1)
 
     # ToreGastTeam
-    SpielErgebnis = dict.get(spiel, 'MatchResults')
-    EndErgebnis = SpielErgebnis[1]
-    ToreT2 = dict.get(EndErgebnis, 'PointsTeam2')
-    ToreGast_L = str(ToreT2)
+    spielErgebnis = dict.get(spiel, 'MatchResults')
+    endErgebnis = spielErgebnis[1]
+    toreT2 = dict.get(endErgebnis, 'PointsTeam2')
+    toreGast_L = str(toreT2)
     # Match ID entschlüsseln
-    MatchID_L = (dict.get(spiel, 'MatchID'))
+    matchID_L = (dict.get(spiel, 'MatchID'))
 
     # ''ausgabe check ' alle Spiele in die Ausgabe
     #zu Überprüfung, optional auschaltbar
@@ -252,12 +257,12 @@ def spielliste_erstellen(spiel):
     # print(ToreGast_L)
 
     # erstellen der Spieldatei welche später in die Datenbank eingefügt wird
-    Spiel_allgemein = Spiele(MatchID=MatchID_L, Datum=Datum_L, Heim=Heim_L,
-    Gast=Gast_L, ToreHeim=ToreHeim_L, ToreGast=ToreGast_L)
+    Spiel_allgemein = Spiele(MatchID=matchID_L, Datum=datum_L, Heim=heim_L,
+    Gast=gast_L, ToreHeim=toreHeim_L, ToreGast=toreGast_L)
 
     # Check ob das aktuell erstellte Spiel bereits
     #in der Datenbank enthalten ist
-    ret = session.query(exists().where(Spiele.id == MatchID_L)).scalar()
+    ret = session.query(exists().where(Spiele.id == matchID_L)).scalar()
     if(ret == True):
         pass
     else:
@@ -304,23 +309,23 @@ def crawlTeams(Jahr, Spieltag):
     TeamListe = []
 
     # externe Daten
-    Spieltaglink = ("https://www.openligadb.de/api/getmatchdata/bl1/") + str(Jahr) + ("/") + str(Spieltag)
+    spieltaglink = ("https://www.openligadb.de/api/getmatchdata/bl1/") + str(Jahr) + ("/") + str(Spieltag)
 
     # holt externe Daten eines Spieltages
-    r = requests.get(Spieltaglink)
-    y = json.loads(r.text)
+    r = requests.get(spieltaglink)
+    bodyliste = json.loads(r.text)
 
     # geht alle Begegnungen des Spieltages durch
 
-    for p in y:
+    for spiel in bodyliste:
         # Speichere jeweils die Heimmanschaft
-        a = dict.get(p, "Team1")
+        a = dict.get(spiel, "Team1")
         b = dict.get(a, "TeamName")
         Heim = str(b)
         TeamListe.append(Heim)
 
         # Speichere jeweils die Gastmannschaft
-        c = dict.get(p, "Team2")
+        c = dict.get(spiel, "Team2")
         d = dict.get(c, "TeamName")
         Gast = str(d)
         TeamListe.append(Gast)
@@ -473,8 +478,8 @@ arguments: Variable theta, Matrix y
 returns: negative log-Likelihood-Funktion
 '''
 
-def neg_llh(theta, y):
-    f = np.sum(y * theta - np.exp(theta))
+def neg_llh(theta, toreMatrix):
+    f = np.sum(toreMatrix * theta - np.exp(theta))
     return -f
 
 
@@ -488,24 +493,24 @@ Gewinnwhkt von Gast enthält)
 
 def poissonWahrscheinlichkeit(Heim, Gast):
     goal_probabilities = np.zeros((10, 10))
-    a = crawlTore(Heim, Gast).T
+    ToreMatrix = crawlTore(Heim, Gast).T
 
     #compute theta for the home-team
-    result_home = minimize_scalar(neg_llh, method='Bounded', bounds=(0., 1000.), args=(a[:, 0]))
+    result_home = minimize_scalar(neg_llh, method='Bounded', bounds=(0., 500.), args=(ToreMatrix[:, 0]))
     #convert theta to lambda:
     lambda1 = np.exp(-result_home.x)
 
     #compute theta for the away-team
-    result_away = minimize_scalar(neg_llh, method='Bounded', bounds=(0., 1000.), args=(a[:, 1]))
+    result_away = minimize_scalar(neg_llh, method='Bounded', bounds=(0., 500.), args=(ToreMatrix[:, 1]))
     #convert theta to lambda:
     lambda2 = np.exp(-result_away.x)
 
     for j in range(10):
         #Probability for home to score j goals against away as a home-team
-        prob_home = lambda1**j * np.exp(-lambda1) / factorial(j)
+        prob_home =  np.exp(-lambda1)* lambda1**(j)/ factorial(j)
         for k in range(10):
             #Probability for away to score k goals against home as a away-team
-            prob_away = np.exp(-lambda2) * lambda2**k / factorial(k)
+            prob_away = np.exp(-lambda2) * lambda2**(k) / factorial(k)
             #fill table with probabilities of all results
             goal_probabilities[j, k] = prob_home * prob_away
 
@@ -517,7 +522,6 @@ def poissonWahrscheinlichkeit(Heim, Gast):
     Siegwahrscheinlichkeit_Team2 = round(100 * np.sum(untereDreicksmatrix), 1)
 
     Unentschiedenwahrscheinlichkeit = round(100 - Siegwahrscheinlichkeit_Team1 - Siegwahrscheinlichkeit_Team2, 1)
-
     ErgebnisWahrscheinlichkeiten = list(
         (Siegwahrscheinlichkeit_Team1, Unentschiedenwahrscheinlichkeit, Siegwahrscheinlichkeit_Team2))
     return ErgebnisWahrscheinlichkeiten
@@ -535,7 +539,7 @@ class GUI:
         self.crawlerbutton = tk.Button(self.Window, text='\nStarte Crawler\n',
                                        fg='black', bg="grey", width=10,
                                        height=1,
-                                       command=CrawlHelper)
+                                       command=crawlHelper)
 
         # Training
         self.trainingbutton = tk.Button(self.Window,
@@ -588,7 +592,7 @@ class GUI:
         # Label
         self.ueberschrift = tk.Label(self.Window, text="Bundesliga-Vorhersage \n", font='Helvetica 20 bold')
 
-        self.labelWähleDatensatz = tk.Label(self.Window, text="Wähle Zeitraum:", font='Helvetica 10 bold')
+        self.labelWaehleDatensatz = tk.Label(self.Window, text="Wähle Zeitraum:", font='Helvetica 10 bold')
         self.labelVon = tk.Label(self.Window, text="Von Saison, Spieltag:")
         self.labelBis = tk.Label(self.Window, text="Bis Saison, Spieltag:")
         self.ErrorLabel = tk.Label(self.Window, text="", fg="red")
@@ -653,7 +657,7 @@ class GUI:
         self.LabelkommenderSpieltag.grid(column=0, row=50)
         self.labelVon.grid(column=1, row=2)
         self.labelBis.grid(column=1, row=3)
-        self.labelWähleDatensatz.grid(column=1, row=1)
+        self.labelWaehleDatensatz.grid(column=1, row=1)
         self.ErrorLabel.grid(column=2, row=4)
         self.VonSaisonEntry.grid(column=2, row=2)
         self.BisSaisonEntry.grid(column=2, row=3)
