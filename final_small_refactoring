@@ -11,9 +11,14 @@ import numpy as np
 from scipy.optimize import minimize_scalar
 from math import factorial
 
-#Erstellen der Datenbank
-Base = declarative_base()  # Erstellen der Basis
+'''
+erstellen einer Datenbank
+In tabellen Form mit den Spalten
+id, Datum, Heim, Gast, ToreHeim, ToreGast,
 
+'''
+
+Base = declarative_base()  # Erstellen der Basis
 
 class Spiele(Base):
     __tablename__ = "spiele"
@@ -48,12 +53,12 @@ session.commit()  # abschließende Aktualisierung
 # Testaufruf einzelner Key eines Spiels
 # Teste alle matchid`s Überprüfung auf doppelte ID`s
 # Test eines Beispiels
-def testeinesSpiels(d):
-    print(Spiel_zugriff[d].id)
-    print(Spiel_zugriff[d].Heim)
-    print(Spiel_zugriff[d].ToreHeim)
-    print(Spiel_zugriff[d].Gast)
-    print(Spiel_zugriff[d].ToreGast)
+def testeinesSpiels(spiel):
+    print(Spiel_zugriff[spiel].id)
+    print(Spiel_zugriff[spiel].Heim)
+    print(Spiel_zugriff[spiel].ToreHeim)
+    print(Spiel_zugriff[spiel].Gast)
+    print(Spiel_zugriff[spiel].ToreGast)
 
 
 #Globale Variablen berechnen
@@ -69,7 +74,7 @@ def berechneAktuelleSaison():
     jahr = now.year
     monat = now.month
     # je nach dem, ob es vor oder nach Juli ist,
-    #ist man in verschiednenen Saisons
+    #ist man in verschiedenen Saisons
     if monat >= 7:
         return jahr
     else:
@@ -91,8 +96,8 @@ returns: boolean
 
 def oldMatchIsFinished():
     global p
-    a = dict.get(p, "MatchIsFinished")
-    if (a == True):
+    matchstatus = dict.get(p, "MatchIsFinished")
+    if matchstatus:
         return True
     else:
         return False
@@ -109,12 +114,12 @@ def berechneAktuellerSpieltag():
     global p
     a = dict.get(p, "Group")
     spieltag = dict.get(a, "GroupOrderID")
-    b = oldMatchIsFinished()
-    if (b == True):
+    matchstatus = oldMatchIsFinished()
+    if matchstatus:
         return spieltag
     else:
-        if (spieltag - 1) > 0:
-            return (spieltag - 1)
+        if spieltag - 1 > 0:
+            return spieltag - 1
         else:
             global aktuellesJahr
             aktuellesJahr = aktuellesJahr - 1
@@ -130,14 +135,14 @@ returns: kommender Spieltag
 
 def berechneKommenderSpieltag():
     if aktuellerSpieltag < 34:
-        return (aktuellerSpieltag + 1)
+        return aktuellerSpieltag + 1
     else:
         global aktuellesJahr
         aktuellesJahr = aktuellesJahr + 1
         return 1
 
 
-AnzahlSpieleGesamt = session.query(Spiele).count()
+anzahlSpieleGesamt = session.query(Spiele).count()
 aktuellesJahr = berechneAktuelleSaison()
 aktuellerSpieltag = berechneAktuellerSpieltag()
 kommenderSpieltag = berechneKommenderSpieltag()
@@ -151,25 +156,26 @@ returns: none
 '''
 
 
-def CrawlHelper():
-    Spieltagsjahre()
+
+def crawlHelper():
+    spieltagsjahre()
+    gui.Window.destroy()
     gui.Window.update()
     gui.Window.mainloop()
 
-
 '''
-Funktion Spieltagsjahre ruft für jedes Saisonjahr....?
+Funktion Spieltagsjahre erstellt für jedes Spieljahr einen Saisonlink
 arguments: none
 returns: den aktuellensaisonlink für die weiter Berechnung des Crawlers
 '''
 
 
-def Spieltagsjahre():
+def spieltagsjahre():
     jahreszahl = 2009
     while jahreszahl < aktuellesJahr:
         saisonlink ="https://www.openligadb.de/api/getmatchdata/bl1/" + str(jahreszahl) + "/"
         spieltage_counter(saisonlink)
-        jahreszahl =+ 1
+        jahreszahl = jahreszahl+ 1
 
 
 '''
@@ -182,11 +188,11 @@ returns: jeweils den einzelnen Datensatzes eines Spieltages
 def spieltage_counter(saisonlink):
     spieltagszahl = 1
     while spieltagszahl < 35:
-        Spieltaglink = (saisonlink) + str(spieltagszahl)
-        linkanfrage = requests.get(Spieltaglink)
+        spieltaglink = saisonlink + str(spieltagszahl)
+        linkanfrage = requests.get(spieltaglink)
         spieldaten = json.loads(linkanfrage.text)
-        AusgabeEinesSpieltages(spieldaten)
-        spieltagszahl =+ 1
+        ausgabeEinesSpieltages(spieldaten)
+        spieltagszahl = spieltagszahl+ 1
     session.commit()
 
 
@@ -198,7 +204,7 @@ returns: weitergabe eines einzelnen Spieldatensatzes
 '''
 
 
-def AusgabeEinesSpieltages(spieldaten):
+def ausgabeEinesSpieltages(spieldaten):
     for spiel in spieldaten:
         spielliste_erstellen(spiel)
 
@@ -210,60 +216,63 @@ arguments: Datensatz für ein Spiel
 returns: eine Liste in folgender Form und Daten
         spiel(spiel-id, Heim-name, Gast-name, Heim-Tore, Gast- Tore)
         welche in der Datenbank überprüft und gespeichert wird
+
+
 '''
 
 
 def spielliste_erstellen(spiel):
 
     # Datum aufrufen aus der Liste
-    Datum_L = str(dict.get(spiel, "MatchDateTime"))
+    datum_l = str(dict.get(spiel, "MatchDateTime"))
     # Aufrufen der Heimmanschaft
-    a = dict.get(spiel, "Team1")
-    b = dict.get(a, "TeamName")
-    Heim_L = str(b)
+    openligadbjsapiteam1 = dict.get(spiel, "Team1")
+    teamheim = dict.get(openligadbjsapiteam1, "TeamName")
+    heim_l = str(teamheim)
 
     # Aufrufen der Gastmannschaft
-    c = dict.get(spiel, "Team2")
-    d = dict.get(c, "TeamName")
-    Gast_L = str(d)
+    openligadbjsapiteam2 = dict.get(spiel, "Team2")
+    teamgast = dict.get(openligadbjsapiteam2, "TeamName")
+    gast_l = str(teamgast)
 
     # ToreHeimTeam
-    SpielErgebnis = dict.get(spiel, 'MatchResults')
-    EndErgebnis = SpielErgebnis[1]
-    ToreT1 = dict.get(EndErgebnis, 'PointsTeam1')
-    ToreHeim_L = str(ToreT1)
+    spiel_ergebnis = dict.get(spiel, 'MatchResults')
+    end_ergebnis = spiel_ergebnis[1]
+    toret1 = dict.get(end_ergebnis, 'PointsTeam1')
+    toreheim_l = str(toret1)
 
     # ToreGastTeam
-    SpielErgebnis = dict.get(spiel, 'MatchResults')
-    EndErgebnis = SpielErgebnis[1]
-    ToreT2 = dict.get(EndErgebnis, 'PointsTeam2')
-    ToreGast_L = str(ToreT2)
+    spiel_ergebnis = dict.get(spiel, 'MatchResults')
+    end_ergebnis = spiel_ergebnis[1]
+    toret2 = dict.get(end_ergebnis, 'PointsTeam2')
+    toregast_l = str(toret2)
     # Match ID entschlüsseln
-    MatchID_L = (dict.get(spiel, 'MatchID'))
+    matchID_l = (dict.get(spiel, 'MatchID'))
 
-    # ''ausgabe check ' alle Spiele in die Ausgabe
-    #zu Überprüfung, optional auschaltbar
-    # diverse Tests für die Ausgabe
+    '''ausgabe check ' alle Spiele in die Ausgabe
+    zu Überprüfung, optional einfach ausklammern
+     diverse Tests für die Ausgabe
+     print(datum_l)
+     print(heim_l)
+     print(gast_l)
+     print(toreheim_l)
+     print(toregast_l)
+    '''
     print(dict.get(spiel, 'MatchID'))
-    # print(Datum_L)
-    # print(Heim_L)
-    # print(Gast_L)
-    # print(ToreHeim_L)
-    # print(ToreGast_L)
 
     # erstellen der Spieldatei welche später in die Datenbank eingefügt wird
-    Spiel_allgemein = Spiele(MatchID=MatchID_L, Datum=Datum_L, Heim=Heim_L,
-    Gast=Gast_L, ToreHeim=ToreHeim_L, ToreGast=ToreGast_L)
+    spiel_allgemein = Spiele(MatchID=matchID_l, Datum=datum_l, Heim=heim_l,
+                             Gast=gast_l, ToreHeim=toreheim_l, ToreGast=toregast_l)
 
-    # Check ob das aktuell erstellte Spiel bereits
-    #in der Datenbank enthalten ist
-    ret = session.query(exists().where(Spiele.id == MatchID_L)).scalar()
-    if(ret == True):
+    # Check ob das aktuell erstellte Spiel bereits in der Datenbank enthalten ist
+    ret = session.query(exists().where(Spiele.id == matchID_l)).scalar()
+    if ret:
         pass
     else:
-        session.add(Spiel_allgemein)  # falls nicht hinzufügen des Spiels
+        session.add(spiel_allgemein)  # falls nicht hinzufügen des Spiels
 
-    session.commit()  # aktualisieren der Datei
+    session.commit()  # aktualisieren der Datenbank
+
 
 
 #Funktionen für Trainingsbutton
@@ -277,18 +286,27 @@ returns: Liste, die die Indizes untereSchranke und obereSchranke enthält
 '''
 
 
-def Schnittstelle(v, w, x, y):
-    if v < 2009 or v > aktuellesJahr or x < 2009 or x > aktuellesJahr or w < 1 or y < 1 or w > 34 or y > 34:
-        return (-1, -1)
+def schnittstelle(beginnjahr, beginnspieltag, endejahr, endespieltag):
+    spieleprospieltag = 9
+    spieleletztesspiel = 8
+    spieleprosaison = 306
+    beginndaten = 2009
+    spieltageprosaison = 34
+
+    if beginnjahr < beginndaten or beginnjahr > aktuellesJahr or endejahr < beginndaten or endejahr > aktuellesJahr or \
+            beginnspieltag < 1 or endespieltag < 1 or beginnspieltag > spieltageprosaison \
+            or endespieltag > spieltageprosaison:
+        return -1, -1
     else:
-        untereSchranke = (v - 2009) * 306 + (w - 1) * 9
-        obereSchranke = (x - 2009) * 306 + (y - 1) * 9 + 8
+        untereschranke = (beginnjahr - beginndaten) * spieleprosaison + (beginnspieltag - 1) * spieleprospieltag
+        obereschranke = \
+            (endejahr - beginndaten) * spieleprosaison + (endespieltag - 1) * spieleprospieltag + spieleletztesspiel
         # UntereID= Spiel_zugriff[untereSchranke].id
         # ObereID= Spiel_zugriff[obereSchranke].id
-        print(AnzahlSpieleGesamt)
-        if ((AnzahlSpieleGesamt - 1) < obereSchranke) or (obereSchranke < untereSchranke):
-            return (-1, -1)
-        return (untereSchranke, obereSchranke)
+        print(anzahlSpieleGesamt)
+        if (anzahlSpieleGesamt - 1) < obereschranke or obereschranke < untereschranke:
+            return -1, -1
+        return untereschranke, obereschranke
 
 
 #Funktion für Dropdown-Listen
@@ -299,32 +317,32 @@ returns: Liste der Teamnamen
 '''
 
 
-def crawlTeams(Jahr, Spieltag):
+def crawlTeams(jahr, spieltag):
     # enthält Teams einer Saison
-    TeamListe = []
+    teamliste = []
 
     # externe Daten
-    Spieltaglink = ("https://www.openligadb.de/api/getmatchdata/bl1/") + str(Jahr) + ("/") + str(Spieltag)
+    spieltaglink = "https://www.openligadb.de/api/getmatchdata/bl1/" + str(jahr) + "/" + str(spieltag)
 
     # holt externe Daten eines Spieltages
-    r = requests.get(Spieltaglink)
-    y = json.loads(r.text)
+    dateiopenligadb = requests.get(spieltaglink)
+    bodyliste = json.loads(dateiopenligadb.text)
 
     # geht alle Begegnungen des Spieltages durch
 
-    for p in y:
-        # Speichere jeweils die Heimmanschaft
-        a = dict.get(p, "Team1")
-        b = dict.get(a, "TeamName")
-        Heim = str(b)
-        TeamListe.append(Heim)
+    for spiel in bodyliste:
+        # Speichere jeweils die Heimmanschaft aus der json Datei
+        a = dict.get(spiel, "Team1")
+        heimteam = dict.get(a, "TeamName")
+        heim = str(heimteam)
+        teamliste.append(heim)
 
-        # Speichere jeweils die Gastmannschaft
-        c = dict.get(p, "Team2")
-        d = dict.get(c, "TeamName")
-        Gast = str(d)
-        TeamListe.append(Gast)
-    return TeamListe
+        # Speichere jeweils die Gastmannschaft aus der json Datei
+        c = dict.get(spiel, "Team2")
+        gastteam = dict.get(c, "TeamName")
+        gast = str(gastteam)
+        teamliste.append(gast)
+    return teamliste
 
 
 #Funktion für Label des kommenden Spieltages
@@ -337,27 +355,31 @@ returns: String
 '''
 
 
-def resultString(Team1, Team2, Alg):
+def resultString(team1, team2, alg):
 
-    if (Alg == "minimal"):
-        Liste = Gewinnwahrscheinlichkeit(Team1, Team2)
-    elif (Alg == "poisson"):
-        Liste = poissonWahrscheinlichkeit(Team1, Team2)
+    liste = list
+    if alg == "minimal":
+        liste = minvorhersage(team1, team2)
+    elif alg == "poisson":
+        liste = poissonWahrscheinlichkeit(team1, team2)
 
-    if (int(Liste[0]) + int(Liste[2]) + int(Liste[1]) < 10):
+    if int(liste[0]) + int(liste[2]) + int(liste[1]) < 10:
         return "keine Daten in der Datenbank"
 
-    if (Liste[0] > 90 or Liste[2] > 90 or Liste[1] > 90):
+    if liste[0] > 90 or liste[2] > 90 or liste[1] > 90:
         return "keine Daten in der Datenbank"
 
-    elif Liste[0] >= Liste[1] and Liste[0] >= Liste[2]:
-        return str(Liste[0]) + "% " + "Heimsieg: " + str(Liste[0]) + "% - " + str(Liste[1]) + "% - " + str(Liste[2]) + "% "
+    elif liste[0] >= liste[1] and liste[0] >= liste[2]:
+        return str(liste[0]) + "% " + "Heimsieg: " + str(liste[0]) + "% - " \
+               + str(liste[1]) + "% - " + str(liste[2]) + "% "
 
-    elif Liste[2] >= Liste[0] and Liste[2] >= Liste[1]:
-        return str(Liste[2]) + "% " + "Gastsieg: " + str(Liste[0]) + "% - " + str(Liste[1]) + "% - " + str(Liste[2])  + "% "
+    elif liste[2] >= liste[0] and liste[2] >= liste[1]:
+        return str(liste[2]) + "% " + "Gastsieg: " + str(liste[0]) + "% - " \
+               + str(liste[1]) + "% - " + str(liste[2]) + "% "
 
-    elif Liste[1] >= Liste[0] and Liste[1] >= Liste[2]:
-        return str(Liste[1]) + "% " + "Remis: " + str(Liste[0]) + "% - " + str(Liste[1]) + "% - " + str(Liste[2]) + "% "
+    elif liste[1] >= liste[0] and liste[1] >= liste[2]:
+        return str(liste[1]) + "% " + "Remis: " + str(liste[0]) + "% - " \
+               + str(liste[1]) + "% - " + str(liste[2]) + "% "
 
     else:
         return "keine Daten in der Datenbank"
@@ -374,53 +396,57 @@ Gewinnwhkt von Team2 enthält)
 '''
 
 
-def Gewinnwahrscheinlichkeit(Team1, Team2):
-    SiegTeam1 = 0
-    UnentschiedenTeam1 = 0
-    NiederlageTeam1 = 0
-    SiegTeam2 = 0
-    UnentschiedenTeam2 = 0
-    NiederlageTeam2 = 0
+def minvorhersage(team1, team2):
+    siegteam1 = 0
+    unentschiedenteam1 = 0
+    niederlageteam1 = 0
+    siegteam2 = 0
+    unentschiedenteam2 = 0
+    niederlageteam2 = 0
 
     i = 0
-    indexSpiel = AnzahlSpieleGesamt - 1  # Indexfunktion
+    indexspiel = anzahlSpieleGesamt - 1  # Indexfunktion
 
-    while i < 5:
+    anzahlspiele_minvorhersage = 5
+    spieleeinesspieltages = 9
+    while i < anzahlspiele_minvorhersage:
 
-        indexSp = (indexSpiel - (i * 9))
+        indexsp = (indexspiel - (i * 9))
         j = 0
-        while j < 9:
-            if (Spiel_zugriff[indexSp - j].Heim == Team1):
-                if(Spiel_zugriff[indexSp - j].ToreHeim > Spiel_zugriff[indexSp - j].ToreGast):
-                 SiegTeam1 = SiegTeam1 + 1
-                if(Spiel_zugriff[indexSp - j].ToreHeim == Spiel_zugriff[indexSp - j].ToreGast):
-                    UnentschiedenTeam1 = UnentschiedenTeam1 + 1
-                if (Spiel_zugriff[indexSp - j].ToreHeim < Spiel_zugriff[indexSp - j].ToreGast):
-                    NiederlageTeam1 = NiederlageTeam1 + 1
 
-            if (Spiel_zugriff[indexSp - j].Gast == Team1):
-                if (Spiel_zugriff[indexSp - j].ToreGast > Spiel_zugriff[indexSp - j].ToreHeim):
-                    SiegTeam1 = SiegTeam1 + 1
-                if (Spiel_zugriff[indexSp - j].ToreGast == Spiel_zugriff[indexSp - j].ToreHeim):
-                    UnentschiedenTeam1 = UnentschiedenTeam1 + 1
-                if (Spiel_zugriff[indexSp - j].ToreGast < Spiel_zugriff[indexSp - j].ToreHeim):
-                    NiederlageTeam1 = NiederlageTeam1 + 1
 
-            if (Spiel_zugriff[indexSp - j].Heim == Team2):
-                if (Spiel_zugriff[indexSp - j].ToreHeim > Spiel_zugriff[indexSp - j].ToreGast):
-                    SiegTeam2 = SiegTeam2 + 1
-                if (Spiel_zugriff[indexSp - j].ToreHeim == Spiel_zugriff[indexSp - j].ToreGast):
-                    UnentschiedenTeam2 = UnentschiedenTeam2 + 1
-                if (Spiel_zugriff[indexSp - j].ToreHeim < Spiel_zugriff[indexSp - j].ToreGast):
-                    NiederlageTeam2 = NiederlageTeam2 + 1
+        while j < spieleeinesspieltages:
+            if Spiel_zugriff[indexsp - j].Heim == team1:
+                if Spiel_zugriff[indexsp - j].ToreHeim > Spiel_zugriff[indexsp - j].ToreGast:
+                    siegteam1 = siegteam1 + 1
+                if Spiel_zugriff[indexsp - j].ToreHeim == Spiel_zugriff[indexsp - j].ToreGast:
+                    unentschiedenteam1 = unentschiedenteam1 + 1
+                if Spiel_zugriff[indexsp - j].ToreHeim < Spiel_zugriff[indexsp - j].ToreGast:
+                    niederlageteam1 = niederlageteam1 + 1
 
-            if (Spiel_zugriff[indexSp - j].Gast == Team2):
-                if (Spiel_zugriff[indexSp - j].ToreGast > Spiel_zugriff[indexSp - j].ToreHeim):
-                    SiegTeam2 = SiegTeam2 + 1
-                if (Spiel_zugriff[indexSp - j].ToreGast == Spiel_zugriff[indexSp - j].ToreHeim):
-                    UnentschiedenTeam2 = UnentschiedenTeam2 + 1
-                if (Spiel_zugriff[indexSp - j].ToreGast < Spiel_zugriff[indexSp - j].ToreHeim):
-                    NiederlageTeam2 = NiederlageTeam2 + 1
+            if Spiel_zugriff[indexsp - j].Gast == team1:
+                if Spiel_zugriff[indexsp - j].ToreGast > Spiel_zugriff[indexsp - j].ToreHeim:
+                    siegteam1 = siegteam1 + 1
+                if Spiel_zugriff[indexsp - j].ToreGast == Spiel_zugriff[indexsp - j].ToreHeim:
+                    unentschiedenteam1 = unentschiedenteam1 + 1
+                if Spiel_zugriff[indexsp - j].ToreGast < Spiel_zugriff[indexsp - j].ToreHeim:
+                    niederlageteam1 = niederlageteam1 + 1
+
+            if Spiel_zugriff[indexsp - j].Heim == team2:
+                if Spiel_zugriff[indexsp - j].ToreHeim > Spiel_zugriff[indexsp - j].ToreGast:
+                    siegteam2 = siegteam2 + 1
+                if Spiel_zugriff[indexsp - j].ToreHeim == Spiel_zugriff[indexsp - j].ToreGast:
+                    unentschiedenteam2 = unentschiedenteam2 + 1
+                if Spiel_zugriff[indexsp - j].ToreHeim < Spiel_zugriff[indexsp - j].ToreGast:
+                    niederlageteam2 = niederlageteam2 + 1
+
+            if Spiel_zugriff[indexsp - j].Gast == team2:
+                if Spiel_zugriff[indexsp - j].ToreGast > Spiel_zugriff[indexsp - j].ToreHeim:
+                    siegteam2 = siegteam2 + 1
+                if Spiel_zugriff[indexsp - j].ToreGast == Spiel_zugriff[indexsp - j].ToreHeim:
+                    unentschiedenteam2 = unentschiedenteam2 + 1
+                if Spiel_zugriff[indexsp - j].ToreGast < Spiel_zugriff[indexsp - j].ToreHeim:
+                    niederlageteam2 = niederlageteam2 + 1
 
             j = j + 1
 
@@ -434,14 +460,15 @@ def Gewinnwahrscheinlichkeit(Team1, Team2):
     # print(UnentschiedenTeam2)
     # print(NiederlageTeam2)
 
-    if ((SiegTeam1 + SiegTeam2 + UnentschiedenTeam1 + UnentschiedenTeam2 + NiederlageTeam1 + NiederlageTeam2) == 10):
-        Siegwahrscheinlichkeit_Team1 = ((SiegTeam1 + NiederlageTeam2) / 10 * 100)
-        Unentschiedenwahrscheinlichkeit = (
-            (UnentschiedenTeam1 + UnentschiedenTeam2) / 10 * 100)
-        Siegwahrscheinlichkeit_Team2 = ((SiegTeam2 + NiederlageTeam1) / 10 * 100)
-        ErgebnisWahrscheinlichkeiten = list(
-            (Siegwahrscheinlichkeit_Team1, Unentschiedenwahrscheinlichkeit, Siegwahrscheinlichkeit_Team2))
-        return ErgebnisWahrscheinlichkeiten
+    if (siegteam1 + siegteam2 + unentschiedenteam1 + unentschiedenteam2 + niederlageteam1 + niederlageteam2) == (2 *
+        anzahlspiele_minvorhersage):
+        siegwahrscheinlichkeit_team1 = ((siegteam1 + niederlageteam2) / 10 * 100)
+        unentschiedenwahrscheinlichkeit = (
+                (unentschiedenteam1 + unentschiedenteam2) / 10 * 100)
+        siegwahrscheinlichkeit_team2 = ((siegteam2 + niederlageteam1) / 10 * 100)
+        ergebniswahrscheinlichkeiten = list(
+            (siegwahrscheinlichkeit_team1, unentschiedenwahrscheinlichkeit, siegwahrscheinlichkeit_team2))
+        return ergebniswahrscheinlichkeiten
 
     else:
         return list((0, 0, 0))
@@ -454,17 +481,17 @@ returns: numpy array
 '''
 
 
-def crawlTore (Heim, Gast):
-    HeimListe = []
-    GastListe = []
+def crawlTore (heim, gast):
+    heimliste = []
+    gastliste = []
 
-    for x in Spiel_zugriff:
-        if ((x.Heim == Heim) and (x.Gast == Gast)):
-            HeimListe.append(x.ToreHeim)
-            GastListe.append(x.ToreGast)
+    for spiel in Spiel_zugriff:
+        if spiel.Heim == heim and spiel.Gast == gast:
+            heimliste.append(spiel.ToreHeim)
+            gastliste.append(spiel.ToreGast)
 
-    toreMatrix = np.array([HeimListe, GastListe])
-    return toreMatrix
+    torematrix = np.array([heimliste, gastliste])
+    return torematrix
 
 
 '''
@@ -473,8 +500,8 @@ arguments: Variable theta, Matrix y
 returns: negative log-Likelihood-Funktion
 '''
 
-def neg_llh(theta, y):
-    f = np.sum(y * theta - np.exp(theta))
+def neg_llh(theta, torematrix):
+    f = np.sum(torematrix * theta - np.exp(theta))
     return -f
 
 
@@ -486,41 +513,40 @@ returns: ErgebnisWahrscheinlichkeiten
 Gewinnwhkt von Gast enthält)
 '''
 
-def poissonWahrscheinlichkeit(Heim, Gast):
+def poissonWahrscheinlichkeit(heim, gast):
     goal_probabilities = np.zeros((10, 10))
-    a = crawlTore(Heim, Gast).T
+    torematrix = crawlTore(heim, gast).T
 
     #compute theta for the home-team
-    result_home = minimize_scalar(neg_llh, method='Bounded', bounds=(0., 1000.), args=(a[:, 0]))
+    theta_home = minimize_scalar(neg_llh, method='Bounded', bounds=(0., 500.), args=(torematrix[:, 0]))
     #convert theta to lambda:
-    lambda1 = np.exp(-result_home.x)
+    lambda_home = np.exp(-theta_home.x)
 
     #compute theta for the away-team
-    result_away = minimize_scalar(neg_llh, method='Bounded', bounds=(0., 1000.), args=(a[:, 1]))
+    theta_away = minimize_scalar(neg_llh, method='Bounded', bounds=(0., 500.), args=(torematrix[:, 1]))
     #convert theta to lambda:
-    lambda2 = np.exp(-result_away.x)
+    lambda_away = np.exp(-theta_away.x)
 
     for j in range(10):
         #Probability for home to score j goals against away as a home-team
-        prob_home = lambda1**j * np.exp(-lambda1) / factorial(j)
+        prob_home =  np.exp(-lambda_home)* lambda_home**j / factorial (j)
         for k in range(10):
             #Probability for away to score k goals against home as a away-team
-            prob_away = np.exp(-lambda2) * lambda2**k / factorial(k)
+            prob_away = np.exp(-lambda_away) * lambda_away**k / factorial(k)
             #fill table with probabilities of all results
             goal_probabilities[j, k] = prob_home * prob_away
 
 
-    obereDreicksmatrix = np.triu(goal_probabilities, k=1)
-    Siegwahrscheinlichkeit_Team1 = round(100 * np.sum(obereDreicksmatrix), 1)
+    oberedreicksmatrix = np.triu(goal_probabilities, k=1)
+    siegwahrscheinlichkeit_team1 = round(100 * np.sum(oberedreicksmatrix), 1)
 
-    untereDreicksmatrix = np.tril(goal_probabilities, k=-1)
-    Siegwahrscheinlichkeit_Team2 = round(100 * np.sum(untereDreicksmatrix), 1)
+    unteredreicksmatrix = np.tril(goal_probabilities, k=-1)
+    siegwahrscheinlichkeit_team2 = round(100 * np.sum(unteredreicksmatrix), 1)
 
-    Unentschiedenwahrscheinlichkeit = round(100 - Siegwahrscheinlichkeit_Team1 - Siegwahrscheinlichkeit_Team2, 1)
-
-    ErgebnisWahrscheinlichkeiten = list(
-        (Siegwahrscheinlichkeit_Team1, Unentschiedenwahrscheinlichkeit, Siegwahrscheinlichkeit_Team2))
-    return ErgebnisWahrscheinlichkeiten
+    unentschiedenwahrscheinlichkeit = round(100 - siegwahrscheinlichkeit_team1 - siegwahrscheinlichkeit_team2, 1)
+    ergebniswahrscheinlichkeiten = list(
+        (siegwahrscheinlichkeit_team1, unentschiedenwahrscheinlichkeit, siegwahrscheinlichkeit_team2))
+    return ergebniswahrscheinlichkeiten
 
 
 
@@ -535,14 +561,14 @@ class GUI:
         self.crawlerbutton = tk.Button(self.Window, text='\nStarte Crawler\n',
                                        fg='black', bg="grey", width=10,
                                        height=1,
-                                       command=CrawlHelper)
+                                       command=crawlHelper)
 
         # Training
         self.trainingbutton = tk.Button(self.Window,
                                         text='\nStarte \n Poisson-Training\n',
                                         fg='black', bg="grey",
                                         width=15, height=2,
-                                        command=self.starteMachineLearningTraining)
+                                        command=self.startePoissonTraining)
 
         # Berechnung starten
         self.calculateButton = tk.Button(self.Window, text='Berechne Gewinnwahrscheinlichkeit',
@@ -588,7 +614,7 @@ class GUI:
         # Label
         self.ueberschrift = tk.Label(self.Window, text="Bundesliga-Vorhersage \n", font='Helvetica 20 bold')
 
-        self.labelWähleDatensatz = tk.Label(self.Window, text="Wähle Zeitraum:", font='Helvetica 10 bold')
+        self.labelWaehleDatensatz = tk.Label(self.Window, text="Wähle Zeitraum:", font='Helvetica 10 bold')
         self.labelVon = tk.Label(self.Window, text="Von Saison, Spieltag:")
         self.labelBis = tk.Label(self.Window, text="Bis Saison, Spieltag:")
         self.ErrorLabel = tk.Label(self.Window, text="", fg="red")
@@ -605,6 +631,8 @@ class GUI:
         self.labelGast = tk.Label(self.Window, text="\nGast:", width=25, font='Helvetica 10 bold')
 
         self.LabelkommenderSpieltag = tk.Label(self.Window, text="Der kommende Spieltag:", width=25, font='Helvetica 10 bold')
+        self.LabelMinimalerAlg = tk.Label(self.Window, text="Minimaler-Alg.:", width=25, font='Helvetica 10 bold')
+        self.LabelPoissonAlg = tk.Label(self.Window, text="Poisson-Alg.:", width=25, font='Helvetica 10 bold')
 
         self.heim1 = None
         self.gast1 = None
@@ -643,7 +671,12 @@ class GUI:
         self.erg9 = None
         self.erg9P = None
 
-        self.erstelleKommenderSpieltag()
+        try:
+            self.erstelleKommenderSpieltag()
+        except:
+            pass
+
+
 
         # Postition in Grid festlegen
         self.crawlerbutton.grid(column=0, row=1, sticky='W')
@@ -651,9 +684,11 @@ class GUI:
         self.checkbutton1.grid(column=0, row=4, sticky='W')
         self.checkbutton2.grid(column=0, row=3, sticky='W')
         self.LabelkommenderSpieltag.grid(column=0, row=50)
+        self.LabelMinimalerAlg.grid(column=2, row=50)
+        self.LabelPoissonAlg.grid(column=3, row=50)
         self.labelVon.grid(column=1, row=2)
         self.labelBis.grid(column=1, row=3)
-        self.labelWähleDatensatz.grid(column=1, row=1)
+        self.labelWaehleDatensatz.grid(column=1, row=1)
         self.ErrorLabel.grid(column=2, row=4)
         self.VonSaisonEntry.grid(column=2, row=2)
         self.BisSaisonEntry.grid(column=2, row=3)
@@ -683,25 +718,25 @@ class GUI:
     '''
 
     def erstelleKommenderSpieltag(self):
-        kommendeMannschaften = crawlTeams(aktuellesJahr, kommenderSpieltag)
-        labelNamesHeim = [self.heim1, self.heim2, self.heim3, self.heim4, self.heim5,
+        kommendemannschaften = crawlTeams(aktuellesJahr, kommenderSpieltag)
+        labelnamesheim = [self.heim1, self.heim2, self.heim3, self.heim4, self.heim5,
                           self.heim6, self.heim7, self.heim8, self.heim9]
-        labelNamesGast = [self.gast1, self.gast2, self.gast3, self.gast4, self.gast5,
+        labelnamesgast = [self.gast1, self.gast2, self.gast3, self.gast4, self.gast5,
                           self.gast6, self.gast7, self.gast8, self.gast9]
-        labelNamesErgebnis = [self.erg1, self.erg2, self.erg3, self.erg4, self.erg5,
+        labelnamesergebnis = [self.erg1, self.erg2, self.erg3, self.erg4, self.erg5,
                               self.erg6, self.erg7, self.erg8, self.erg9]
-        labelNamesErgPoiss = [self.erg1P, self.erg2P, self.erg3P, self.erg4P, self.erg5P,
+        labelnamesergpoiss = [self.erg1P, self.erg2P, self.erg3P, self.erg4P, self.erg5P,
                               self.erg6P, self.erg7P, self.erg8P, self.erg9P]
 
         spieltag = 50
         # definiere Reihe ab der die Labels angezeigt werden sollen
 
-        for i, (a, b, c, d) in enumerate(zip(labelNamesHeim, labelNamesGast, labelNamesErgebnis, labelNamesErgPoiss)):
-            a = tk.Label(self.Window, text=kommendeMannschaften[2 * i], width=20).grid(column=0, row=spieltag + i + 1)
-            b = tk.Label(self.Window, text=kommendeMannschaften[2 * i + 1], width=20).grid(column=1, row=spieltag + i + 1)
-            c = tk.Label(self.Window, text=resultString(kommendeMannschaften[2 * i], kommendeMannschaften[2 * i + 1], "minimal"),
+        for i, (a, b, c, d) in enumerate(zip(labelnamesheim, labelnamesgast, labelnamesergebnis, labelnamesergpoiss)):
+            a = tk.Label(self.Window, text=kommendemannschaften[2 * i], width=20).grid(column=0, row=spieltag + i + 1)
+            b = tk.Label(self.Window, text=kommendemannschaften[2 * i + 1], width=20).grid(column=1, row=spieltag + i + 1)
+            c = tk.Label(self.Window, text=resultString(kommendemannschaften[2 * i], kommendemannschaften[2 * i + 1], "minimal"),
                          width=30).grid(column=2, row=spieltag + i + 1)
-            d = tk.Label(self.Window, text=resultString(kommendeMannschaften[2 * i], kommendeMannschaften[2 * i + 1], "poisson"),
+            d = tk.Label(self.Window, text=resultString(kommendemannschaften[2 * i], kommendemannschaften[2 * i + 1], "poisson"),
                          width=30).grid(column=3, row=spieltag + i + 1)
 
     '''
@@ -738,16 +773,16 @@ class GUI:
     returns: none
     '''
 
-    def starteMachineLearningTraining(self):
-        VonSaison = self.VonSaisonEntry.get()
-        BisSaison = self.BisSaisonEntry.get()
-        VonTag = self.VonTagEntry.get()
-        BisTag = self.BisTagEntry.get()
-        if VonSaison.isdigit() and BisSaison.isdigit() and VonTag.isdigit() and BisTag.isdigit():
+    def startePoissonTraining(self):
+        vonsaison = self.VonSaisonEntry.get()
+        bissaison = self.BisSaisonEntry.get()
+        vontag = self.VonTagEntry.get()
+        bistag = self.BisTagEntry.get()
+        if vonsaison.isdigit() and bissaison.isdigit() and vontag.isdigit() and bistag.isdigit():
             #Todo: Binde Funktion ein, die die gewünschten Daten aus der Datenbank holt
-            Schranken = Schnittstelle(
-                int(VonSaison), int(VonTag), int(BisSaison), int(BisTag))
-            if Schranken[0] < 0:
+            schranken = schnittstelle(
+                int(vonsaison), int(vontag), int(bissaison), int(bistag))
+            if schranken[0] < 0:
                 self.ErrorLabel.config(
                     text="Saison zwischen 2009 und 2018,\n Tag zwischen 1 und 34"
                     )
@@ -771,14 +806,14 @@ class GUI:
             self.labelGewinnGastNum.config(text="")
         else:
             if self.MV.get() == 1:
-                Liste = Gewinnwahrscheinlichkeit(self.var1.get(), self.var2.get())
-                self.labelGewinnHeimNum.config(text=str(Liste[0])+"%")
-                self.labelUnentschiedenNum.config(text=str(Liste[1])+"%")
-                self.labelGewinnGastNum.config(text=str(Liste[2])+"%")
+                liste = minvorhersage(self.var1.get(), self.var2.get())
+                self.labelGewinnHeimNum.config(text=str(liste[0])+"%")
+                self.labelUnentschiedenNum.config(text=str(liste[1])+"%")
+                self.labelGewinnGastNum.config(text=str(liste[2])+"%")
             else:
-                Liste = poissonWahrscheinlichkeit(self.var1.get(), self.var2.get())
-                self.labelGewinnHeimNum.config(text=str(Liste[0])+"%")
-                self.labelUnentschiedenNum.config(text=str(Liste[1])+"%")
-                self.labelGewinnGastNum.config(text=str(Liste[2])+"%")
+                liste = poissonWahrscheinlichkeit(self.var1.get(), self.var2.get())
+                self.labelGewinnHeimNum.config(text=str(liste[0])+"%")
+                self.labelUnentschiedenNum.config(text=str(liste[1])+"%")
+                self.labelGewinnGastNum.config(text=str(liste[2])+"%")
 gui = GUI()
 gui.Window.mainloop()
